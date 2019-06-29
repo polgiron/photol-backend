@@ -1,9 +1,9 @@
-import session from './session';
-import user from './user';
-import message from './message';
+// import session from './session';
+// import user from './user';
+import image from './image';
 
 export default {
-  session,
-  user,
-  message,
+  // session,
+  // user,
+  image,
 };
