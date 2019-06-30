@@ -1,9 +1,7 @@
-// import session from './session';
-// import user from './user';
 import image from './image';
+import album from './album';
 
 export default {
-  // session,
-  // user,
   image,
+  album
 };

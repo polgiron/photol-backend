@@ -3,8 +3,10 @@ import { Router } from 'express';
 const router = Router();
 
 router.get('/', async (req, res) => {
-  const images = await req.context.models.Image.find();
-  return res.send(images);
+  const albums = await req.context.models.Album.find();
+  console.log(albums);
+
+  return res.send(albums);
 });
 
 // router.get('/:messageId', async (req, res) => {
@@ -14,16 +16,15 @@ router.get('/', async (req, res) => {
 //   return res.send(message);
 // });
 
-router.post('/', async (req, res) => {
-  // console.log(req.body);
+// router.post('/', async (req, res) => {
+//   console.log(req.body);
 
-  const image = await req.context.models.Image.create({
-    title: req.body.title,
-    // albums: req.body.albums
-  });
+//   const album = await req.context.models.Album.create({
+//     title: req.body.title
+//   });
 
-  return res.send(image);
-});
+//   return res.send(album);
+// });
 
 // router.delete('/:messageId', async (req, res) => {
 //   const message = await req.context.models.Message.findById(

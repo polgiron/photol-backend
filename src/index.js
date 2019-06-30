@@ -34,9 +34,8 @@ app.use(async (req, res, next) => {
 // ---
 // Routes
 
-// app.use('/session', routes.session);
-// app.use('/users', routes.user);
 app.use('/image', routes.image);
+app.use('/album', routes.album);
 
 
 // ---
@@ -48,9 +47,10 @@ connectDb().then(async () => {
   if (eraseDatabaseOnSync) {
     await Promise.all([
       models.Image.deleteMany({}),
+      models.Album.deleteMany({}),
     ]);
 
-    createImages();
+    createAlbumWithImages();
   }
 
   app.listen(process.env.PORT, () =>
@@ -58,10 +58,24 @@ connectDb().then(async () => {
   );
 });
 
-const createImages = async () => {
-  const image1 = new models.Image({
-    title: 'hello world image'
+const createAlbumWithImages = async () => {
+  const album = new models.Album({
+    title: 'hello album!'
   });
 
+  const image1 = new models.Image({
+    title: 'hello world image',
+    albums: [album.id]
+  });
+
+  const image2 = new models.Image({
+    title: 'hello world image 2',
+    albums: [album.id]
+  });
+
+  await album.save();
   await image1.save();
+  await image2.save();
+
+  // image1.updateOne('albums', [album.id]);
 };
