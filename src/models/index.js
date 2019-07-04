@@ -5,7 +5,7 @@ import Image from './image';
 import Album from './album';
 
 const connectDb = () => {
-  return mongoose.connect(process.env.DATABASE_URL);
+  return mongoose.connect(process.env.DATABASE_URL, { useNewUrlParser: true });
 };
 
 // const models = { User, Image };

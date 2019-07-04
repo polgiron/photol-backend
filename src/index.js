@@ -7,13 +7,9 @@ import routes from './routes';
 
 const app = express();
 
-// import bodyParser from 'body-parser';
-// app.use(bodyParser.json());
-// app.use(bodyParser.urlencoded({ extended: true }));
-
 // Body parser express built in
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '50mb', extended: true }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Cors ONLY DEV, needs whitelist
 app.use(cors());
@@ -53,9 +49,10 @@ connectDb().then(async () => {
     createAlbumWithImages();
   }
 
-  app.listen(process.env.PORT, () =>
-    console.log(`Example app listening on port ${process.env.PORT}!`),
-  );
+  app.listen(process.env.PORT, () => {
+    console.log('-----------');
+    console.log(`listening on port ${process.env.PORT}!`);
+  });
 });
 
 const createAlbumWithImages = async () => {
@@ -76,6 +73,4 @@ const createAlbumWithImages = async () => {
   await album.save();
   await image1.save();
   await image2.save();
-
-  // image1.updateOne('albums', [album.id]);
 };

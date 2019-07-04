@@ -8,8 +8,11 @@ const imageSchema = new mongoose.Schema({
   albums: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Album'
-  }]
-  // user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  }],
+  url_o: {
+    type: String,
+    // required: true,
+  }
 });
 
 imageSchema.pre('save', function (next) {
@@ -20,7 +23,7 @@ imageSchema.pre('save', function (next) {
     this.model('Album').findOneAndUpdate(
       { _id: albumId },
       { $addToSet: { 'images': this._id } },
-      { safe: true, upsert: true, new: true },
+      { safe: true, upsert: true, new: true, useFindAndModify: false },
       function (err, model) {
         // console.log(err, model);
       }
