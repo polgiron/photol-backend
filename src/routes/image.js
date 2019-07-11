@@ -1,28 +1,79 @@
 import { Router } from 'express';
+import sizeOf from 'image-size';
+import multer from 'multer';
+import S3 from '../utils/s3';
 
-// S3
-import aws from 'aws-sdk';
+const generateS3Key = function(mimetype) {
+  return 'original/' + Date.now().toString() + '.' + mimetype.replace('image/', '');
+};
 
-// ---
-// AWS
-
-aws.config.update({
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  region: 'eu-west-3'
+const upload = multer({
+  // limits: { fileSize: 10 * 1024 * 1024 }
 });
 
-const s3 = new aws.S3();
-
+const uploadToS3 = function(file, callback) {
+  S3.upload({
+    // ACL: 'public-read',
+    Body: file.buffer,
+    // Body: fs.createReadStream(file.buffer),
+    Key: generateS3Key(file.mimetype),
+    ContentType: file.mimetype
+    // ContentType: 'application/octet-stream' // force download if it's accessed as a top location
+  })
+  // http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3/ManagedUpload.html#httpUploadProgress-event
+  .on('httpUploadProgress', event => {
+    // console.log('---');
+    // console.log('event', event);
+  })
+  .send(callback);
+};
 
 // ---
 // Routes
 
 const router = Router();
 
-router.get('/', async (req, res) => {
-  const images = await req.context.models.Image.find();
+router.get('/all', async (req, res) => {
+  const images = await req.context.models.Image.find().lean();
   return res.send(images);
+});
+
+router.post('/', upload.single('file'), (req, res) => {
+  // console.log('file to upload');
+  // console.log(req.file);
+
+  if (!req.file) {
+    return res.status(403).send('expect 1 file upload named file1').end();
+  }
+
+  if (!/^image\/(jpe?g|png|gif)$/i.test(req.file.mimetype)) {
+    return res.status(403).send('expect image file').end();
+  }
+
+  uploadToS3(req.file, (err, data) => {
+    // console.log('---');
+    // console.log('S3 callback', err, data);
+
+    if (err) {
+      console.error(err);
+      return res.status(500).send('failed to upload to s3').end();
+    }
+
+    const dimensions = sizeOf(req.file.buffer);
+
+    req.context.models.Image.create({
+      title: req.body.title,
+      albums: req.body.albums ? req.body.albums : [],
+      s3_key: data.key,
+      type: req.file.mimetype,
+      original_width: dimensions.width,
+      original_height: dimensions.height
+    });
+
+    res.status(200)
+      .send('File uploaded to S3')
+      .end();
+  });
 });
 
 // router.get('/:messageId', async (req, res) => {
@@ -31,55 +82,6 @@ router.get('/', async (req, res) => {
 //   );
 //   return res.send(message);
 // });
-
-router.post('/', async (req, res) => {
-  console.log(req.body.title);
-
-  const base64Data = new Buffer.from(req.body.base64.replace(/^data:image\/\w+;base64,/, ''), 'base64');
-  const type = req.body.base64.split(';')[0].split('/')[1];
-
-  const params = {
-    Bucket: process.env.S3_BUCKET,
-    Key: 'original/' + Date.now().toString(),
-    Body: base64Data,
-    ACL: 'public-read',
-    ContentEncoding: 'base64',
-    ContentType: `image/${type}`
-  };
-
-  s3.upload(params, (err, data) => {
-    if (err) { return console.log(err) };
-
-    console.log('Image successfully uploaded.');
-    console.log(data.Location);
-
-    req.context.models.Image.create({
-      title: req.body.title,
-      albums: req.body.albums ? req.body.albums : [],
-      url_o: data.Location
-    });
-
-    // return data.Location;
-    return res.send(true);
-  });
-
-  // uploadToS3(params).then(location => {
-  //   console.log('HEREEE');
-  //   // console.log('location', location);
-
-    // const image = await req.context.models.Image.create({
-    //   title: req.body.title,
-    //   // albums: req.body.albums
-    // });
-
-  //   // return res.send(image);
-  // });
-
-  // const image = await req.context.models.Image.create({
-  //   title: req.body.title,
-  //   // albums: req.body.albums
-  // });
-});
 
 // async function uploadToS3(params) {
 //   return await s3.upload(params, (err, data) => {

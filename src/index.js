@@ -37,7 +37,7 @@ app.use('/album', routes.album);
 // ---
 // Start server
 
-const eraseDatabaseOnSync = true;
+const eraseDatabaseOnSync = false;
 
 connectDb().then(async () => {
   if (eraseDatabaseOnSync) {
@@ -46,7 +46,7 @@ connectDb().then(async () => {
       models.Album.deleteMany({}),
     ]);
 
-    createAlbumWithImages();
+    // createAlbumWithImages();
   }
 
   app.listen(process.env.PORT, () => {

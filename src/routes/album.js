@@ -2,10 +2,9 @@ import { Router } from 'express';
 
 const router = Router();
 
-router.get('/', async (req, res) => {
+router.get('/all', async (req, res) => {
   const albums = await req.context.models.Album.find();
-  console.log(albums);
-
+  // console.log(albums);
   return res.send(albums);
 });
 
