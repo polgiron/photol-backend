@@ -37,7 +37,7 @@ app.use('/album', routes.album);
 // ---
 // Start server
 
-const eraseDatabaseOnSync = true;
+const eraseDatabaseOnSync = false;
 
 connectDb().then(async () => {
   if (eraseDatabaseOnSync) {
