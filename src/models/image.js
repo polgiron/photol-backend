@@ -14,6 +14,10 @@ const imageSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  s3_id: {
+    type: String,
+    required: true
+  },
   type: {
     type: String
   },

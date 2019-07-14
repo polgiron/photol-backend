@@ -1,23 +1,40 @@
 import { Router } from 'express';
 import sizeOf from 'image-size';
 import multer from 'multer';
+import sharp from 'sharp';
 import S3 from '../utils/s3';
 
-const generateS3Key = function(mimetype) {
-  return 'original/' + Date.now().toString() + '.' + mimetype.replace('image/', '');
+const generateS3Key = function(isThumb, dateId, mimetype, thumbSize) {
+  const folder = isThumb ? 'thumb/' : 'ori/';
+  const thumbSizePath = isThumb ? `_${thumbSize}` : '';
+  return folder + dateId + thumbSizePath + '.' + mimetype.replace('image/', '');
+  // return 'original/' + Date.now().toString() + '.' + mimetype.replace('image/', '');
+};
+
+const generateThumbnails = function(imageBuffer, dateId, mimetype, thumbSize) {
+  const thumbnailBuffer = sharp(imageBuffer)
+    .resize(thumbSize, thumbSize, {
+      fit: 'inside'
+    });
+
+  uploadToS3(thumbnailBuffer, dateId, mimetype, true, thumbSize, (err, data) => {
+    // console.log('---');
+    // console.log('S3 callback THUMB', err, data);
+  });
 };
 
 const upload = multer({
   // limits: { fileSize: 10 * 1024 * 1024 }
 });
 
-const uploadToS3 = function(file, callback) {
+const uploadToS3 = function(fileBuffer, dateId, mimetype, isThumb, thumbSize, callback) {
   S3.upload({
     // ACL: 'public-read',
-    Body: file.buffer,
+    Body: fileBuffer,
     // Body: fs.createReadStream(file.buffer),
-    Key: generateS3Key(file.mimetype),
-    ContentType: file.mimetype
+    Key: generateS3Key(isThumb, dateId, mimetype, thumbSize),
+    // Key: generateS3Key(file.mimetype),
+    ContentType: mimetype
     // ContentType: 'application/octet-stream' // force download if it's accessed as a top location
   })
   // http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3/ManagedUpload.html#httpUploadProgress-event
@@ -27,6 +44,7 @@ const uploadToS3 = function(file, callback) {
   })
   .send(callback);
 };
+
 
 // ---
 // Routes
@@ -50,9 +68,14 @@ router.post('/', upload.single('file'), (req, res) => {
     return res.status(403).send('expect image file').end();
   }
 
-  uploadToS3(req.file, (err, data) => {
-    // console.log('---');
-    // console.log('S3 callback', err, data);
+  const dateId = Date.now().toString();
+
+  generateThumbnails(req.file.buffer, dateId, req.file.mimetype, 400);
+  generateThumbnails(req.file.buffer, dateId, req.file.mimetype, 1200);
+
+  uploadToS3(req.file.buffer, dateId, req.file.mimetype, false, null, (err, data) => {
+    console.log('---');
+    console.log('S3 callback ORI', err, data);
 
     if (err) {
       console.error(err);
@@ -60,11 +83,13 @@ router.post('/', upload.single('file'), (req, res) => {
     }
 
     const dimensions = sizeOf(req.file.buffer);
+    // const key = data.key.replace('original/', '');
 
     req.context.models.Image.create({
       title: req.body.title,
       albums: req.body.albums ? req.body.albums : [],
       s3_key: data.key,
+      s3_id: dateId,
       type: req.file.mimetype,
       original_width: dimensions.width,
       original_height: dimensions.height
