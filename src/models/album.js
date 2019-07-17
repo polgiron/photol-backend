@@ -4,6 +4,11 @@ const albumSchema = new mongoose.Schema({
   title: {
     type: String,
     required: true,
+    unique: true
+  },
+  rollId: {
+    type: Number,
+    unique: true
   },
   images: [{
     type: mongoose.Schema.Types.ObjectId,

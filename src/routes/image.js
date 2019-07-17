@@ -13,7 +13,7 @@ const generateS3Key = function(isThumb, dateId, mimetype, thumbSize) {
 
 const generateThumbnails = function(imageBuffer, dateId, mimetype, thumbSize) {
   const thumbnailBuffer = sharp(imageBuffer)
-    .resize(thumbSize, thumbSize, {
+    .resize(Number(thumbSize), Number(thumbSize), {
       fit: 'inside'
     });
 
@@ -51,11 +51,6 @@ const uploadToS3 = function(fileBuffer, dateId, mimetype, isThumb, thumbSize, ca
 
 const router = Router();
 
-router.get('/all', async (req, res) => {
-  const images = await req.context.models.Image.find().lean();
-  return res.send(images);
-});
-
 router.post('/', upload.single('file'), (req, res) => {
   // console.log('file to upload');
   // console.log(req.file);
@@ -70,8 +65,8 @@ router.post('/', upload.single('file'), (req, res) => {
 
   const dateId = Date.now().toString();
 
-  generateThumbnails(req.file.buffer, dateId, req.file.mimetype, 400);
-  generateThumbnails(req.file.buffer, dateId, req.file.mimetype, 1200);
+  generateThumbnails(req.file.buffer, dateId, req.file.mimetype, process.env.SMALL_THUMB_SIZE);
+  generateThumbnails(req.file.buffer, dateId, req.file.mimetype, process.env.BIG_THUMB_SIZE);
 
   uploadToS3(req.file.buffer, dateId, req.file.mimetype, false, null, (err, data) => {
     console.log('---');
@@ -86,13 +81,14 @@ router.post('/', upload.single('file'), (req, res) => {
     // const key = data.key.replace('original/', '');
 
     req.context.models.Image.create({
-      title: req.body.title,
+      // title: req.body.title,
       albums: req.body.albums ? req.body.albums : [],
-      s3_key: data.key,
-      s3_id: dateId,
+      s3Key: data.key,
+      s3Id: dateId,
       type: req.file.mimetype,
-      original_width: dimensions.width,
-      original_height: dimensions.height
+      extension: req.file.mimetype.replace('image/', ''),
+      oriWidth: dimensions.width,
+      oriHeight: dimensions.height
     });
 
     res.status(200)
@@ -101,12 +97,27 @@ router.post('/', upload.single('file'), (req, res) => {
   });
 });
 
-// router.get('/:messageId', async (req, res) => {
-//   const message = await req.context.models.Message.findById(
-//     req.params.messageId,
-//   );
-//   return res.send(message);
-// });
+router.get('/all', async (req, res) => {
+  const images = await req.context.models.Image.find().lean();
+  return res.send(images);
+});
+
+router.get('/:imageId/big', async (req, res) => {
+  const image = await req.context.models.Image.findById(
+    req.params.imageId
+  );
+
+  const bigThumbKey = `thumb/${image.s3Id}_${process.env.BIG_THUMB_SIZE}.${image.extension}`;
+
+  const signedUrl = S3.getSignedUrl('getObject', {
+    // Bucket: process.env.S3_BUCKET,
+    // Key: image.s3Key,
+    Key: bigThumbKey,
+    Expires: 300 // 5 minutes
+  });
+
+  return res.send(JSON.stringify({ 'signedUrl': signedUrl }));
+});
 
 // async function uploadToS3(params) {
 //   return await s3.upload(params, (err, data) => {

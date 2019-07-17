@@ -3,28 +3,32 @@ import S3 from '../utils/s3';
 
 const imageSchema = new mongoose.Schema({
   title: {
-    type: String,
-    required: true
+    type: String
   },
   albums: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Album'
   }],
-  s3_key: {
+  s3Key: {
     type: String,
-    required: true
+    required: true,
+    unique: true
   },
-  s3_id: {
+  s3Id: {
     type: String,
-    required: true
+    required: true,
+    unique: true
   },
   type: {
     type: String
   },
-  original_width: {
+  extension: {
     type: String
   },
-  original_height: {
+  oriWidth: {
+    type: String
+  },
+  oriHeight: {
     type: String
   }
 });
@@ -53,15 +57,20 @@ imageSchema.post('find', function (images) {
   images.forEach(image => {
     // console.log('----');
     // console.log('image title: ' + image.title);
-    // console.log('image s3 key: ' + image.s3_key);
+    // console.log('image s3 key: ' + image.s3Key);
+
+    const smallThumbKey = `thumb/${image.s3Id}_${process.env.SMALL_THUMB_SIZE}.${image.extension}`;
 
     const signedUrl = S3.getSignedUrl('getObject', {
       // Bucket: process.env.S3_BUCKET,
-      Key: image.s3_key,
+      // Key: image.s3Key,
+      Key: smallThumbKey,
       Expires: 300 // 5 minutes
     });
 
-    image.signed_url = signedUrl;
+    // console.log('signedUrl', signedUrl);
+
+    image.signedUrl = signedUrl;
   });
 });
 
