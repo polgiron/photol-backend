@@ -2,7 +2,7 @@ import { Router } from 'express';
 import sizeOf from 'image-size';
 import multer from 'multer';
 import sharp from 'sharp';
-import S3 from '../utils/s3';
+import { S3, getSignedUrl } from '../utils/s3';
 
 const generateS3Key = function(isThumb, dateId, mimetype, thumbSize) {
   const folder = isThumb ? 'thumb/' : 'ori/';
@@ -80,6 +80,9 @@ router.post('/', upload.single('file'), (req, res) => {
     const dimensions = sizeOf(req.file.buffer);
     // const key = data.key.replace('original/', '');
 
+    console.log('req.body.albums');
+    console.log(req.body.albums);
+
     req.context.models.Image.create({
       // title: req.body.title,
       albums: req.body.albums ? req.body.albums : [],
@@ -107,14 +110,7 @@ router.get('/:imageId/big', async (req, res) => {
     req.params.imageId
   );
 
-  const bigThumbKey = `thumb/${image.s3Id}_${process.env.BIG_THUMB_SIZE}.${image.extension}`;
-
-  const signedUrl = S3.getSignedUrl('getObject', {
-    // Bucket: process.env.S3_BUCKET,
-    // Key: image.s3Key,
-    Key: bigThumbKey,
-    Expires: 300 // 5 minutes
-  });
+  const signedUrl = getSignedUrl(image, 'big');
 
   return res.send(JSON.stringify({ 'signedUrl': signedUrl }));
 });

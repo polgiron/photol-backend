@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import S3 from '../utils/s3';
+import { getSignedUrl } from '../utils/s3';
 
 const imageSchema = new mongoose.Schema({
   title: {
@@ -52,25 +52,8 @@ imageSchema.pre('save', function (next) {
 });
 
 imageSchema.post('find', function (images) {
-  // console.log('Before find image');
-
   images.forEach(image => {
-    // console.log('----');
-    // console.log('image title: ' + image.title);
-    // console.log('image s3 key: ' + image.s3Key);
-
-    const smallThumbKey = `thumb/${image.s3Id}_${process.env.SMALL_THUMB_SIZE}.${image.extension}`;
-
-    const signedUrl = S3.getSignedUrl('getObject', {
-      // Bucket: process.env.S3_BUCKET,
-      // Key: image.s3Key,
-      Key: smallThumbKey,
-      Expires: 300 // 5 minutes
-    });
-
-    // console.log('signedUrl', signedUrl);
-
-    image.signedUrl = signedUrl;
+    image.signedUrl = getSignedUrl(image, 'small');
   });
 });
 

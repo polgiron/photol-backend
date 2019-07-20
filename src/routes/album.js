@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { getSignedUrl } from '../utils/s3';
 
 const router = Router();
 
@@ -6,6 +7,33 @@ router.get('/all', async (req, res) => {
   const albums = await req.context.models.Album.find();
   // console.log(albums);
   return res.send(albums);
+});
+
+router.get('/:albumId', async (req, res) => {
+  const album = await req.context.models.Album
+    .findById(
+      req.params.albumId,
+    )
+    .populate('images')
+    .lean()
+    .exec((err, album) => {
+      // if (err) return handleError(err);
+
+      album.images.forEach(image => {
+        // console.log('----');
+        image.signedUrl = getSignedUrl(image, 'small');
+      });
+
+      return res.send(JSON.stringify({ 'album': album }));
+    });
+});
+
+router.get('/roll/:rollId', async (req, res) => {
+  const album = await req.context.models.Album.findOne({ rollId: req.params.rollId });
+  // console.log('album');
+  // console.log(album);
+  // return res.send(album);
+  return res.send(JSON.stringify({ 'album': album }));
 });
 
 // router.get('/:messageId', async (req, res) => {
