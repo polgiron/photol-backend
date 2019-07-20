@@ -6,11 +6,11 @@ const router = Router();
 router.get('/all', async (req, res) => {
   const albums = await req.context.models.Album.find();
   // console.log(albums);
-  return res.send(albums);
+  return res.send(JSON.stringify({ 'albums': albums }));
 });
 
 router.get('/:albumId', async (req, res) => {
-  const album = await req.context.models.Album
+  await req.context.models.Album
     .findById(
       req.params.albumId,
     )

@@ -3,8 +3,7 @@ import mongoose from 'mongoose';
 const albumSchema = new mongoose.Schema({
   title: {
     type: String,
-    required: true,
-    unique: false
+    required: true
   },
   rollId: {
     type: Number,
@@ -13,7 +12,11 @@ const albumSchema = new mongoose.Schema({
   images: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Image'
-  }]
+  }],
+  coverImage: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Image'
+  }
 });
 
 const Album = mongoose.model('Album', albumSchema);

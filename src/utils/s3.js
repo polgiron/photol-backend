@@ -38,4 +38,23 @@ export const getSignedUrl = function(image, size) {
   return signedUrl;
 }
 
+export const deleteS3Object = function(key) {
+  // Delete from S3
+  const params = {
+    Key: key
+  };
+
+  S3.deleteObject(params, function (err, data) {
+    if (err) console.log(err, err.stack);
+    else console.log('deleted from S3');
+  });
+}
+
+export const deleteFromS3 = function(image) {
+  console.log('Delete from S3');
+  deleteS3Object(`thumb/${image.s3Id}_${process.env.SMALL_THUMB_SIZE}.${image.extension}`);
+  deleteS3Object(`thumb/${image.s3Id}_${process.env.BIG_THUMB_SIZE}.${image.extension}`);
+  deleteS3Object(`ori/${image.s3Id}.${image.extension}`);
+}
+
 // export default S3;

@@ -30,6 +30,9 @@ const imageSchema = new mongoose.Schema({
   },
   oriHeight: {
     type: String
+  },
+  favorite: {
+    type: Boolean
   }
 });
 
@@ -56,6 +59,21 @@ imageSchema.post('find', function (images) {
     image.signedUrl = getSignedUrl(image, 'small');
   });
 });
+
+// imageSchema.pre('remove', function (next) {
+//   console.log('PRE REMOVE IMAGE');
+// //   const image = this;
+
+// //   deleteFromS3(`ori/${image.s3Id}.${image.extension}`);
+// //   // deleteFromS3(`thumb/${image.s3Id}_${thumbPath}.${image.extension}`);
+
+// //   // image.model('Album').update(
+// //   //   { images: { $in: image.albums } },
+// //   //   { $pull: { image: image._id } },
+// //   //   { multi: true },
+// //   //   next
+// //   // );
+// });
 
 const Image = mongoose.model('Image', imageSchema);
 

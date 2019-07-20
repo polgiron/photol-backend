@@ -2,7 +2,7 @@ import { Router } from 'express';
 import sizeOf from 'image-size';
 import multer from 'multer';
 import sharp from 'sharp';
-import { S3, getSignedUrl } from '../utils/s3';
+import { S3, getSignedUrl, deleteFromS3 } from '../utils/s3';
 
 const generateS3Key = function(isThumb, dateId, mimetype, thumbSize) {
   const folder = isThumb ? 'thumb/' : 'ori/';
@@ -100,6 +100,36 @@ router.post('/', upload.single('file'), (req, res) => {
   });
 });
 
+router.put('/:imageId', async (req, res) => {
+  // const image = await req.context.models.Image.findById(
+  //   req.params.imageId
+  // );
+
+  // image.favorite = req.body.favorite;
+
+  await req.context.models.Image.findByIdAndUpdate(
+    // the id of the item to find
+    req.params.imageId,
+
+    // the change to be made. Mongoose will smartly combine your existing
+    // document with this change, which allows for partial updates too
+    req.body,
+
+    // an option that asks mongoose to return the updated version
+    // of the document instead of the pre-updated one.
+    { new: true },
+
+    // the callback function
+    (err, image) => {
+      // Handle any possible database errors
+      if (err) return res.status(500).send(err);
+      return res.send(image);
+    }
+  );
+
+  // return res.send(JSON.stringify({ 'image': image }));
+});
+
 router.get('/all', async (req, res) => {
   const images = await req.context.models.Image.find().lean();
   return res.send(images);
@@ -127,17 +157,19 @@ router.get('/:imageId/big', async (req, res) => {
 //   });
 // }
 
-// router.delete('/:messageId', async (req, res) => {
-//   const message = await req.context.models.Message.findById(
-//     req.params.messageId,
-//   );
+router.delete('/:imageId', async (req, res) => {
+  await req.context.models.Image.findByIdAndRemove(req.params.imageId, (err, image) => {
+    if (err) return res.status(500).send(err);
 
-//   let result = null;
-//   if (message) {
-//     result = await message.remove();
-//   }
+    deleteFromS3(image);
 
-//   return res.send(result);
-// });
+    const response = {
+      message: "Image successfully deleted",
+      id: image._id
+    };
+
+    return res.status(200).send(response);
+  });
+});
 
 export default router;
