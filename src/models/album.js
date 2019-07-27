@@ -13,7 +13,7 @@ const albumSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Image'
   }],
-  coverImage: {
+  cover: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Image'
   }

@@ -69,8 +69,8 @@ router.post('/', upload.single('file'), (req, res) => {
   generateThumbnails(req.file.buffer, dateId, req.file.mimetype, process.env.BIG_THUMB_SIZE);
 
   uploadToS3(req.file.buffer, dateId, req.file.mimetype, false, null, (err, data) => {
-    console.log('---');
-    console.log('S3 callback ORI', err, data);
+    // console.log('---');
+    // console.log('S3 callback ORI', err, data);
 
     if (err) {
       console.error(err);
@@ -78,10 +78,6 @@ router.post('/', upload.single('file'), (req, res) => {
     }
 
     const dimensions = sizeOf(req.file.buffer);
-    // const key = data.key.replace('original/', '');
-
-    console.log('req.body.albums');
-    console.log(req.body.albums);
 
     req.context.models.Image.create({
       // title: req.body.title,
@@ -91,7 +87,8 @@ router.post('/', upload.single('file'), (req, res) => {
       type: req.file.mimetype,
       extension: req.file.mimetype.replace('image/', ''),
       oriWidth: dimensions.width,
-      oriHeight: dimensions.height
+      oriHeight: dimensions.height,
+      favorite: false
     });
 
     res.status(200)

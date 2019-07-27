@@ -4,9 +4,23 @@ import { getSignedUrl } from '../utils/s3';
 const router = Router();
 
 router.get('/all', async (req, res) => {
-  const albums = await req.context.models.Album.find();
+  await req.context.models.Album
+    .find()
+    .populate('cover')
+    .lean()
+    .exec((err, albums) => {
+      if (err) return res.status(500).send(err);
+
+      albums.forEach(album => {
+        if (album.cover) {
+          album.cover.signedUrl = getSignedUrl(album.cover, 'small');
+        }
+      });
+
+      return res.send(JSON.stringify({ 'albums': albums }));
+    });
   // console.log(albums);
-  return res.send(JSON.stringify({ 'albums': albums }));
+  // return res.send(JSON.stringify({ 'albums': albums }));
 });
 
 router.get('/:albumId', async (req, res) => {
@@ -15,14 +29,19 @@ router.get('/:albumId', async (req, res) => {
       req.params.albumId,
     )
     .populate('images')
+    .populate('cover')
     .lean()
     .exec((err, album) => {
-      // if (err) return handleError(err);
+      if (err) return res.status(500).send(err);
 
       album.images.forEach(image => {
         // console.log('----');
         image.signedUrl = getSignedUrl(image, 'small');
       });
+
+      if (album.cover) {
+        album.cover.signedUrl = getSignedUrl(album.cover, 'big');
+      }
 
       return res.send(JSON.stringify({ 'album': album }));
     });
@@ -52,6 +71,26 @@ router.post('/', async (req, res) => {
   });
 
   return res.send(album);
+});
+
+router.put('/:albumId', async (req, res) => {
+  await req.context.models.Album
+    .findByIdAndUpdate(
+      req.params.albumId,
+      req.body,
+      { new: true }
+    )
+    .populate('cover')
+    .lean()
+    .exec((err, album) => {
+      if (err) return res.status(500).send(err);
+
+      if (req.body.cover) {
+        album.cover.signedUrl = getSignedUrl(album.cover, 'big');
+      }
+
+      return res.send(JSON.stringify({ 'album': album }));
+    });
 });
 
 // router.delete('/:messageId', async (req, res) => {
