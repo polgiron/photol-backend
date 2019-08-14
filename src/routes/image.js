@@ -3,6 +3,7 @@ import sizeOf from 'image-size';
 import multer from 'multer';
 import sharp from 'sharp';
 import { S3, getSignedUrl, deleteFromS3 } from '../utils/s3';
+import cors from 'cors';
 
 const generateS3Key = function(isThumb, dateId, mimetype, thumbSize) {
   const folder = isThumb ? 'thumb/' : 'ori/';
