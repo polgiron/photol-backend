@@ -13,7 +13,10 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Cors ONLY DEV, needs whitelist
 app.use(cors({
-  origin: 'https://photol.paulgiron.com'
+  origin: 'https://photol.paulgiron.com',
+  methods: 'GET,PUT,POST,DELETE',
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 }));
 
 
