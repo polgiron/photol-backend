@@ -9,6 +9,9 @@ const albumSchema = new mongoose.Schema({
     type: Number,
     unique: true
   },
+  date: {
+    type: Number
+  },
   images: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Image'

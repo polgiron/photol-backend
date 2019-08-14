@@ -34,12 +34,14 @@ router.get('/:albumId', async (req, res) => {
     .exec((err, album) => {
       if (err) return res.status(500).send(err);
 
-      album.images.forEach(image => {
-        // console.log('----');
-        image.signedUrl = getSignedUrl(image, 'small');
-      });
+      if (album && album.images) {
+        album.images.forEach(image => {
+          // console.log('----');
+          image.signedUrl = getSignedUrl(image, 'small');
+        });
+      }
 
-      if (album.cover) {
+      if (album && album.cover) {
         album.cover.signedUrl = getSignedUrl(album.cover, 'big');
       }
 
@@ -67,7 +69,8 @@ router.post('/', async (req, res) => {
 
   const album = await req.context.models.Album.create({
     title: req.body.title,
-    rollId: req.body.rollId
+    rollId: req.body.rollId,
+    date: req.body.date
   });
 
   return res.send(album);
@@ -91,6 +94,19 @@ router.put('/:albumId', async (req, res) => {
 
       return res.send(JSON.stringify({ 'album': album }));
     });
+});
+
+router.delete('/:albumId', async (req, res) => {
+  await req.context.models.Album.findByIdAndRemove(req.params.albumId, (err, album) => {
+    if (err) return res.status(500).send(err);
+
+    const response = {
+      message: "Album successfully deleted",
+      id: album._id
+    };
+
+    return res.status(200).send(response);
+  });
 });
 
 // router.delete('/:messageId', async (req, res) => {

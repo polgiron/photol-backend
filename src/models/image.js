@@ -9,11 +9,11 @@ const imageSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Album'
   }],
-  s3Key: {
-    type: String,
-    required: true,
-    unique: true
-  },
+  // s3Key: {
+  //   type: String,
+  //   required: true,
+  //   unique: true
+  // },
   s3Id: {
     type: String,
     required: true,

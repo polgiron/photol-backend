@@ -8,7 +8,6 @@ const generateS3Key = function(isThumb, dateId, mimetype, thumbSize) {
   const folder = isThumb ? 'thumb/' : 'ori/';
   const thumbSizePath = isThumb ? `_${thumbSize}` : '';
   return folder + dateId + thumbSizePath + '.' + mimetype.replace('image/', '');
-  // return 'original/' + Date.now().toString() + '.' + mimetype.replace('image/', '');
 };
 
 const generateThumbnails = function(imageBuffer, dateId, mimetype, thumbSize) {
@@ -82,7 +81,7 @@ router.post('/', upload.single('file'), (req, res) => {
     req.context.models.Image.create({
       // title: req.body.title,
       albums: req.body.albums ? req.body.albums : [],
-      s3Key: data.key,
+      // s3Key: data.key,
       s3Id: dateId,
       type: req.file.mimetype,
       extension: req.file.mimetype.replace('image/', ''),
@@ -140,6 +139,18 @@ router.get('/:imageId/big', async (req, res) => {
   const signedUrl = getSignedUrl(image, 'big');
 
   return res.send(JSON.stringify({ 'signedUrl': signedUrl }));
+});
+
+router.get('/favorites', async (req, res) => {
+  await req.context.models.Image.find({ favorite: true }, (err, images) => {
+    if (err) return res.status(500).send(err);
+
+    const response = {
+      'images': images
+    };
+
+    return res.status(200).send(response);
+  }).lean();
 });
 
 // async function uploadToS3(params) {
