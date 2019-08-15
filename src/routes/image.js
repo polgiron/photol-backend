@@ -51,7 +51,7 @@ const uploadToS3 = function(fileBuffer, dateId, mimetype, isThumb, thumbSize, ca
 
 const router = Router();
 
-router.post('/', cors(), upload.single('file'), (req, res) => {
+router.post('/', upload.single('file'), (req, res) => {
   // console.log('file to upload');
   // console.log(req.file);
 
