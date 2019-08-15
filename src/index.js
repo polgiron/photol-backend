@@ -19,7 +19,8 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 //   optionsSuccessStatus: 204
 // }));
 app.use(cors({
-  origin: '*'
+  origin: '*',
+  allowedHeaders: 'Content-Type, Access-Control-Allow-Origin'
 }));
 app.options('*', cors());
 
