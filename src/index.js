@@ -19,6 +19,7 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 //   optionsSuccessStatus: 204
 // }));
 app.use(cors());
+app.options('*', cors());
 
 
 // ---
