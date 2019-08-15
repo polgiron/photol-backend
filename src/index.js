@@ -20,9 +20,9 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // }));
 app.use(cors({
   origin: '*',
-  allowedHeaders: 'Content-Type, Access-Control-Allow-Origin'
+  // allowedHeaders: 'Content-Type, Access-Control-Allow-Origin'
 }));
-app.options('*', cors());
+// app.options('*', cors());
 
 
 // ---
