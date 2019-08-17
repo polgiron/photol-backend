@@ -128,18 +128,29 @@ router.put('/:imageId', async (req, res) => {
 });
 
 router.get('/all', async (req, res) => {
-  const images = await req.context.models.Image.find().lean();
-  return res.send(images);
+  await req.context.models.Image.find((err, images) => {
+    if (err) return res.status(500).send(err);
+
+    const response = {
+      'images': images
+    };
+
+    return res.status(200).send(response);
+  }).lean();
 });
 
 router.get('/:imageId/big', async (req, res) => {
-  const image = await req.context.models.Image.findById(
-    req.params.imageId
-  );
+  await req.context.models.Image.findById(req.params.imageId, (err, image) => {
+    if (err) return res.status(500).send(err);
 
-  const signedUrl = getSignedUrl(image, 'big');
+    const signedUrl = getSignedUrl(image, 'big');
 
-  return res.send(JSON.stringify({ 'signedUrl': signedUrl }));
+    const response = {
+      'signedUrl': signedUrl
+    };
+
+    return res.status(200).send(response);
+  }).lean();
 });
 
 router.get('/favorites', async (req, res) => {
