@@ -42,6 +42,7 @@ app.use(async (req, res, next) => {
 
 app.use('/image', routes.image);
 app.use('/album', routes.album);
+app.use('/tag', routes.tag);
 
 
 // ---

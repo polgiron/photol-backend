@@ -98,33 +98,15 @@ router.post('/', upload.single('file'), (req, res) => {
 });
 
 router.put('/:imageId', async (req, res) => {
-  // const image = await req.context.models.Image.findById(
-  //   req.params.imageId
-  // );
-
-  // image.favorite = req.body.favorite;
-
   await req.context.models.Image.findByIdAndUpdate(
-    // the id of the item to find
     req.params.imageId,
-
-    // the change to be made. Mongoose will smartly combine your existing
-    // document with this change, which allows for partial updates too
     req.body,
-
-    // an option that asks mongoose to return the updated version
-    // of the document instead of the pre-updated one.
     { new: true },
-
-    // the callback function
     (err, image) => {
-      // Handle any possible database errors
       if (err) return res.status(500).send(err);
       return res.send(image);
     }
   );
-
-  // return res.send(JSON.stringify({ 'image': image }));
 });
 
 router.get('/all', async (req, res) => {
@@ -136,7 +118,7 @@ router.get('/all', async (req, res) => {
     };
 
     return res.status(200).send(response);
-  }).lean();
+  }).populate('tags').lean();
 });
 
 router.get('/:imageId/big', async (req, res) => {
@@ -162,20 +144,8 @@ router.get('/favorites', async (req, res) => {
     };
 
     return res.status(200).send(response);
-  }).lean();
+  }).populate('tags').lean();
 });
-
-// async function uploadToS3(params) {
-//   return await s3.upload(params, (err, data) => {
-//     if (err) { return console.log(err) };
-
-//     // Save data.Location in your database
-//     console.log('Image successfully uploaded.');
-//     console.log(data.Location);
-
-//     return data.Location;
-//   });
-// }
 
 router.delete('/:imageId', async (req, res) => {
   await req.context.models.Image.findByIdAndRemove(req.params.imageId, (err, image) => {
@@ -184,7 +154,7 @@ router.delete('/:imageId', async (req, res) => {
     deleteFromS3(image);
 
     const response = {
-      message: "Image successfully deleted",
+      message: 'Image successfully deleted',
       id: image._id
     };
 

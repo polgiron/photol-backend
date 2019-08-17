@@ -25,11 +25,14 @@ router.get('/all', async (req, res) => {
 
 router.get('/:albumId', async (req, res) => {
   await req.context.models.Album
-    .findById(
-      req.params.albumId,
-    )
-    .populate('images')
+    .findById(req.params.albumId)
     .populate('cover')
+    .populate({
+      path: 'images',
+      populate: {
+        path: 'tags'
+      }
+    })
     .lean()
     .exec((err, album) => {
       if (err) return res.status(500).send(err);
@@ -65,15 +68,20 @@ router.get('/roll/:rollId', async (req, res) => {
 // });
 
 router.post('/', async (req, res) => {
-  // console.log(req.body);
-
-  const album = await req.context.models.Album.create({
+  await req.context.models.Album.create({
     title: req.body.title,
     rollId: req.body.rollId,
     date: req.body.date
-  });
+  }, (err, album) => {
+    if (err) return res.status(500).send(err);
 
-  return res.send(album);
+    const response = {
+      message: 'Album successfully created',
+      album: album
+    };
+
+    return res.status(200).send(response);
+  });
 });
 
 router.put('/:albumId', async (req, res) => {
@@ -101,7 +109,7 @@ router.delete('/:albumId', async (req, res) => {
     if (err) return res.status(500).send(err);
 
     const response = {
-      message: "Album successfully deleted",
+      message: 'Album successfully deleted',
       id: album._id
     };
 

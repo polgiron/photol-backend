@@ -1,15 +1,14 @@
 import mongoose from 'mongoose';
 
-// import User from './user';
 import Image from './image';
 import Album from './album';
+import Tag from './tag';
 
 const connectDb = () => {
   return mongoose.connect(process.env.DATABASE_URL, { useNewUrlParser: true });
 };
 
-// const models = { User, Image };
-const models = { Image, Album };
+const models = { Image, Album, Tag };
 
 export { connectDb };
 
