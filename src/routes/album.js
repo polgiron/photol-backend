@@ -17,10 +17,12 @@ router.get('/all', async (req, res) => {
         }
       });
 
-      return res.send(JSON.stringify({ 'albums': albums }));
+      const response = {
+        'albums': albums
+      };
+
+      return res.status(200).send(response);
     });
-  // console.log(albums);
-  // return res.send(JSON.stringify({ 'albums': albums }));
 });
 
 router.get('/:albumId', async (req, res) => {
@@ -48,7 +50,11 @@ router.get('/:albumId', async (req, res) => {
         album.cover.signedUrl = getSignedUrl(album.cover, 'big');
       }
 
-      return res.send(JSON.stringify({ 'album': album }));
+      const response = {
+        'album': album
+      };
+
+      return res.status(200).send(response);
     });
 });
 

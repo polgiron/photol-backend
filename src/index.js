@@ -43,6 +43,7 @@ app.use(async (req, res, next) => {
 app.use('/image', routes.image);
 app.use('/album', routes.album);
 app.use('/tag', routes.tag);
+app.use('/settings', routes.settings);
 
 
 // ---
@@ -61,28 +62,41 @@ connectDb().then(async () => {
     // createAlbumWithImages();
   }
 
+  createSettings();
+
   app.listen(process.env.PORT, () => {
     console.log('-----------');
     console.log(`listening on port ${process.env.PORT}!`);
   });
 });
 
-const createAlbumWithImages = async () => {
-  const album = new models.Album({
-    title: 'hello album!'
+const createSettings = async () => {
+  const settings = new models.Settings({
+    data: {
+      editMode: true,
+      displayTags: false
+    }
   });
 
-  const image1 = new models.Image({
-    title: 'hello world image',
-    albums: [album.id]
-  });
-
-  const image2 = new models.Image({
-    title: 'hello world image 2',
-    albums: [album.id]
-  });
-
-  await album.save();
-  await image1.save();
-  await image2.save();
+  await settings.save();
 };
+
+// const createAlbumWithImages = async () => {
+//   const album = new models.Album({
+//     title: 'hello album!'
+//   });
+
+//   const image1 = new models.Image({
+//     title: 'hello world image',
+//     albums: [album.id]
+//   });
+
+//   const image2 = new models.Image({
+//     title: 'hello world image 2',
+//     albums: [album.id]
+//   });
+
+//   await album.save();
+//   await image1.save();
+//   await image2.save();
+// };
