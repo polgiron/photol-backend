@@ -25,10 +25,13 @@ const imageSchema = new mongoose.Schema({
     type: String
   },
   oriWidth: {
-    type: String
+    type: Number
   },
   oriHeight: {
-    type: String
+    type: Number
+  },
+  ratio: {
+    type: Number
   },
   favorite: {
     type: Boolean

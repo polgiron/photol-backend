@@ -30,7 +30,8 @@ export const getSignedUrl = function(image, size) {
     // Bucket: process.env.S3_BUCKET,
     // Key: image.s3Key,
     Key: thumbKey,
-    Expires: 600 // 10 minutes
+    Expires: 5
+    // Expires: 600 // 10 minutes
     // Expires: 300 // 5 minutes
   });
 

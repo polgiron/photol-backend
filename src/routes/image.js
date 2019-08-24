@@ -88,7 +88,9 @@ router.post('/', upload.single('file'), (req, res) => {
       extension: req.file.mimetype.replace('image/', ''),
       oriWidth: dimensions.width,
       oriHeight: dimensions.height,
-      favorite: false
+      ratio: dimensions.width / dimensions.height,
+      favorite: req.body.favorite ? req.body.favorite : false,
+      tags: req.body.tags ? req.body.tags : []
     });
 
     res.status(200)
@@ -118,14 +120,29 @@ router.get('/all', async (req, res) => {
     };
 
     return res.status(200).send(response);
-  }).populate('tags').lean();
+  }).lean();
+  // }).populate('tags').lean();
 });
 
-router.get('/:imageId/big', async (req, res) => {
+router.get('/:imageId', async (req, res) => {
   await req.context.models.Image.findById(req.params.imageId, (err, image) => {
     if (err) return res.status(500).send(err);
 
-    const signedUrl = getSignedUrl(image, 'big');
+    image.signedUrl = getSignedUrl(image, 'big');
+
+    const response = {
+      'image': image
+    };
+
+    return res.status(200).send(response);
+  }).populate('tags').lean();
+});
+
+router.get('/:imageId/signedUrl', async (req, res) => {
+  await req.context.models.Image.findById(req.params.imageId, (err, image) => {
+    if (err) return res.status(500).send(err);
+
+    const signedUrl = getSignedUrl(image, req.query.size);
 
     const response = {
       'signedUrl': signedUrl
@@ -134,6 +151,18 @@ router.get('/:imageId/big', async (req, res) => {
     return res.status(200).send(response);
   }).lean();
 });
+
+// router.get('/:imageId/tags', async (req, res) => {
+//   await req.context.models.Image.findById(req.params.imageId, (err, image) => {
+//     if (err) return res.status(500).send(err);
+
+//     const response = {
+//       'tags': image.tags
+//     };
+
+//     return res.status(200).send(response);
+//   }).populate('tags').lean();
+// });
 
 router.get('/favorites', async (req, res) => {
   await req.context.models.Image.find({ favorite: true }, (err, images) => {

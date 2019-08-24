@@ -43,17 +43,17 @@ router.get('/all', async (req, res) => {
   }).lean();
 });
 
-// router.delete('/:tagId', async (req, res) => {
-//   await req.context.models.Tag.findByIdAndRemove(req.params.tagId, (err, tag) => {
-//     if (err) return res.status(500).send(err);
+router.delete('/:tagId', async (req, res) => {
+  await req.context.models.Tag.findByIdAndRemove(req.params.tagId, (err, tag) => {
+    if (err) return res.status(500).send(err);
 
-//     const response = {
-//       message: "Tag successfully deleted",
-//       id: tag._id
-//     };
+    const response = {
+      message: "Tag successfully deleted",
+      id: tag._id
+    };
 
-//     return res.status(200).send(response);
-//   });
-// });
+    return res.status(200).send(response);
+  });
+});
 
 export default router;
