@@ -1,17 +1,23 @@
-import { Router } from 'express';
+import {
+  Router
+} from 'express';
 import sizeOf from 'image-size';
 import multer from 'multer';
 import sharp from 'sharp';
-import { S3, getSignedUrl, deleteFromS3 } from '../utils/s3';
+import {
+  S3,
+  getSignedUrl,
+  deleteFromS3
+} from '../utils/s3';
 import cors from 'cors';
 
-const generateS3Key = function(isThumb, dateId, mimetype, thumbSize) {
+const generateS3Key = function (isThumb, dateId, mimetype, thumbSize) {
   const folder = isThumb ? 'thumb/' : 'ori/';
   const thumbSizePath = isThumb ? `_${thumbSize}` : '';
   return folder + dateId + thumbSizePath + '.' + mimetype.replace('image/', '');
 };
 
-const generateThumbnails = function(imageBuffer, dateId, mimetype, thumbSize) {
+const generateThumbnails = function (imageBuffer, dateId, mimetype, thumbSize) {
   const thumbnailBuffer = sharp(imageBuffer)
     .resize(Number(thumbSize), Number(thumbSize), {
       fit: 'inside'
@@ -27,22 +33,22 @@ const upload = multer({
   // limits: { fileSize: 10 * 1024 * 1024 }
 });
 
-const uploadToS3 = function(fileBuffer, dateId, mimetype, isThumb, thumbSize, callback) {
+const uploadToS3 = function (fileBuffer, dateId, mimetype, isThumb, thumbSize, callback) {
   S3.upload({
-    // ACL: 'public-read',
-    Body: fileBuffer,
-    // Body: fs.createReadStream(file.buffer),
-    Key: generateS3Key(isThumb, dateId, mimetype, thumbSize),
-    // Key: generateS3Key(file.mimetype),
-    ContentType: mimetype
-    // ContentType: 'application/octet-stream' // force download if it's accessed as a top location
-  })
-  // http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3/ManagedUpload.html#httpUploadProgress-event
-  .on('httpUploadProgress', event => {
-    // console.log('---');
-    // console.log('event', event);
-  })
-  .send(callback);
+      // ACL: 'public-read',
+      Body: fileBuffer,
+      // Body: fs.createReadStream(file.buffer),
+      Key: generateS3Key(isThumb, dateId, mimetype, thumbSize),
+      // Key: generateS3Key(file.mimetype),
+      ContentType: mimetype
+      // ContentType: 'application/octet-stream' // force download if it's accessed as a top location
+    })
+    // http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3/ManagedUpload.html#httpUploadProgress-event
+    .on('httpUploadProgress', event => {
+      // console.log('---');
+      // console.log('event', event);
+    })
+    .send(callback);
 };
 
 
@@ -102,8 +108,9 @@ router.post('/', upload.single('file'), (req, res) => {
 router.put('/:imageId', async (req, res) => {
   await req.context.models.Image.findByIdAndUpdate(
     req.params.imageId,
-    req.body,
-    { new: true },
+    req.body, {
+      new: true
+    },
     (err, image) => {
       if (err) return res.status(500).send(err);
       return res.send(image);
@@ -124,7 +131,7 @@ router.get('/all', async (req, res) => {
   // }).populate('tags').lean();
 });
 
-router.get('/:imageId', async (req, res) => {
+router.get('/:imageId/big', async (req, res) => {
   await req.context.models.Image.findById(req.params.imageId, (err, image) => {
     if (err) return res.status(500).send(err);
 
@@ -136,6 +143,20 @@ router.get('/:imageId', async (req, res) => {
 
     return res.status(200).send(response);
   }).populate('tags').lean();
+});
+
+router.get('/favorites', async (req, res) => {
+  await req.context.models.Image.find({
+    favorite: true
+  }, (err, images) => {
+    if (err) return res.status(500).send(err);
+
+    const response = {
+      'images': images
+    };
+
+    return res.status(200).send(response);
+  }).lean();
 });
 
 router.get('/:imageId/signedUrl', async (req, res) => {
@@ -153,6 +174,7 @@ router.get('/:imageId/signedUrl', async (req, res) => {
 });
 
 // router.get('/:imageId/tags', async (req, res) => {
+//   console.log('Gettings tags by image id');
 //   await req.context.models.Image.findById(req.params.imageId, (err, image) => {
 //     if (err) return res.status(500).send(err);
 
@@ -164,17 +186,18 @@ router.get('/:imageId/signedUrl', async (req, res) => {
 //   }).populate('tags').lean();
 // });
 
-router.get('/favorites', async (req, res) => {
-  await req.context.models.Image.find({ favorite: true }, (err, images) => {
-    if (err) return res.status(500).send(err);
+// router.get('/fav', async (req, res) => {
+//   console.log('Gettings favorites');
+//   await req.context.models.Image.find({ favorite: true }, (err, images) => {
+//     if (err) return res.status(500).send(err);
 
-    const response = {
-      'images': images
-    };
+//     const response = {
+//       'images': images
+//     };
 
-    return res.status(200).send(response);
-  }).populate('tags').lean();
-});
+//     return res.status(200).send(response);
+//   }).lean();
+// });
 
 router.delete('/:imageId', async (req, res) => {
   await req.context.models.Image.findByIdAndRemove(req.params.imageId, (err, image) => {
