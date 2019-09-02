@@ -35,6 +35,9 @@ const imageSchema = new mongoose.Schema({
   },
   favorite: {
     type: Boolean
+  },
+  date: {
+    type: Number
   }
 });
 

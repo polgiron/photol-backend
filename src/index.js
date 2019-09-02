@@ -44,6 +44,7 @@ app.use('/image', routes.image);
 app.use('/album', routes.album);
 app.use('/tag', routes.tag);
 app.use('/settings', routes.settings);
+app.use('/search', routes.search);
 
 
 // ---

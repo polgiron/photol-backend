@@ -6,10 +6,10 @@ const tagSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
-  // images: [{
-  //   type: mongoose.Schema.Types.ObjectId,
-  //   ref: 'Image'
-  // }]
+  images: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Image'
+  }]
 });
 
 // tagSchema.pre('save', function (next) {

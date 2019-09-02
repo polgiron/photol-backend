@@ -5,7 +5,7 @@ const router = Router();
 router.post('/', async (req, res) => {
   await req.context.models.Tag.create({
     value: req.body.value,
-    // images: req.body.images ? req.body.images : []
+    images: req.body.images ? req.body.images : []
   }, (err, tag) => {
     if (err) return res.status(500).send(err);
 
@@ -16,7 +16,7 @@ router.post('/', async (req, res) => {
           { $addToSet: { 'tags': tag._id } },
           { safe: true, upsert: true, new: true, useFindAndModify: false },
           function (err, model) {
-            console.log(err, model);
+            // console.log(err, model);
           }
         );
       });

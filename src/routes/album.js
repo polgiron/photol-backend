@@ -31,9 +31,9 @@ router.get('/:albumId', async (req, res) => {
     .populate('cover')
     .populate({
       path: 'images',
-      // populate: {
-      //   path: 'tags'
-      // }
+      populate: {
+        path: 'tags'
+      }
     })
     .lean()
     .exec((err, album) => {

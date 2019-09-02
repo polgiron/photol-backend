@@ -96,7 +96,8 @@ router.post('/', upload.single('file'), (req, res) => {
       oriHeight: dimensions.height,
       ratio: dimensions.width / dimensions.height,
       favorite: req.body.favorite ? req.body.favorite : false,
-      tags: req.body.tags ? req.body.tags : []
+      // tags: req.body.tags ? req.body.tags : [],
+      date: req.body.date ? req.body.date : null
     });
 
     res.status(200)
@@ -106,6 +107,9 @@ router.post('/', upload.single('file'), (req, res) => {
 });
 
 router.put('/:imageId', async (req, res) => {
+  console.log('Updating image');
+  console.log(req.body);
+
   await req.context.models.Image.findByIdAndUpdate(
     req.params.imageId,
     req.body, {
@@ -113,6 +117,29 @@ router.put('/:imageId', async (req, res) => {
     },
     (err, image) => {
       if (err) return res.status(500).send(err);
+
+      if (req.body.tags) {
+        // console.log('Updating image tags');
+        req.body.tags.map(tag => {
+          // console.log(tag.value);
+          req.context.models.Tag.findOneAndUpdate({
+              _id: tag._id
+            }, {
+              $addToSet: {
+                'images': image._id
+              }
+            }, {
+              safe: true,
+              upsert: true,
+              new: true,
+              useFindAndModify: false
+            }, (err, tag) => {
+              // console.log(err, tag.images);
+            }
+          );
+        });
+      }
+
       return res.send(image);
     }
   );
@@ -127,8 +154,7 @@ router.get('/all', async (req, res) => {
     };
 
     return res.status(200).send(response);
-  }).lean();
-  // }).populate('tags').lean();
+  }).populate('tags').lean();
 });
 
 router.get('/:imageId/big', async (req, res) => {
