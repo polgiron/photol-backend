@@ -9,7 +9,6 @@ import {
   getSignedUrl,
   deleteFromS3
 } from '../utils/s3';
-import cors from 'cors';
 
 const generateS3Key = function (isThumb, dateId, mimetype, thumbSize) {
   const folder = isThumb ? 'thumb/' : 'ori/';
@@ -146,15 +145,51 @@ router.put('/:imageId', async (req, res) => {
 });
 
 router.get('/all', async (req, res) => {
-  await req.context.models.Image.find((err, images) => {
-    if (err) return res.status(500).send(err);
+  // await req.context.models.Image.find((err, images) => {
+  //   if (err) return res.status(500).send(err);
 
-    const response = {
-      'images': images
-    };
+  //   const response = {
+  //     'images': images
+  //   };
 
-    return res.status(200).send(response);
-  }).populate('tags').lean();
+  //   return res.status(200).send(response);
+  // }).populate('tags').lean();
+
+  const options = {
+    page: req.query.page,
+    limit: req.query.limit,
+    lean: true,
+    populate: 'tags'
+  };
+
+  await req.context.models.Image.paginate({}, options, (err, result) => {
+    // console.log(err);
+    // console.log(result.docs.length);
+    // result.docs
+    // result.totalDocs = 100
+    // result.limit = 10
+    // result.page = 1
+    // result.totalPages = 10
+    // result.hasNextPage = true
+    // result.nextPage = 2
+    // result.hasPrevPage = false
+    // result.prevPage = null
+    // result.pagingCounter = 1
+
+      if (err) return res.status(500).send(err);
+
+      result.docs.forEach(image => {
+        image.signedUrl = getSignedUrl(image, 'small');
+      });
+
+      const response = {
+        images: result.docs,
+        hasMore: result.hasNextPage,
+        totalImages: result.totalDocs
+      };
+
+      return res.status(200).send(response);
+  });
 });
 
 router.get('/:imageId/big', async (req, res) => {
