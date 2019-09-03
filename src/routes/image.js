@@ -217,7 +217,7 @@ router.get('/favorites', async (req, res) => {
     };
 
     return res.status(200).send(response);
-  }).lean();
+  }).populate('tags').lean();
 });
 
 router.get('/:imageId/signedUrl', async (req, res) => {

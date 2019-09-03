@@ -72,11 +72,11 @@ imageSchema.pre('save', function (next) {
   next();
 });
 
-// imageSchema.post('find', function (images) {
-//   images.forEach(image => {
-//     image.signedUrl = getSignedUrl(image, 'small');
-//   });
-// });
+imageSchema.post('find', function (images) {
+  images.forEach(image => {
+    image.signedUrl = getSignedUrl(image, 'small');
+  });
+});
 
 // imageSchema.pre('remove', function (next) {
 //   console.log('PRE REMOVE IMAGE');
