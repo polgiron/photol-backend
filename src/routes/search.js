@@ -45,11 +45,12 @@ const performSearch = async function(req, res, searchQueries) {
   }));
 
   // Remove duplicates
-  results = results.filter((image, index) => {
-    return index === results.findIndex(obj => {
-      return JSON.stringify(obj) === JSON.stringify(image);
-    });
-  });
+  results = removeDuplicates(results);
+  // results = results.filter((image, index) => {
+  //   return index === results.findIndex(obj => {
+  //     return JSON.stringify(obj) === JSON.stringify(image);
+  //   });
+  // });
 
   return results;
 }
@@ -93,6 +94,17 @@ const searchAlbums = async function(req, res, query) {
       path: 'tags'
     }
   }).lean();
+}
+
+const removeDuplicates = function(array) {
+  return array.reduce((acc, current) => {
+    const x = acc.find(item => item._id === current._id);
+    if (!x) {
+      return acc.concat([current]);
+    } else {
+      return acc;
+    }
+  }, []);
 }
 
 export default router;
