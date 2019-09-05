@@ -1,9 +1,12 @@
 import express from 'express';
 import cors from 'cors';
 import 'dotenv/config';
+import passport from 'passport';
 
 import models, { connectDb } from './models';
 import routes from './routes';
+
+import './config/passport';
 
 const app = express();
 
@@ -36,6 +39,18 @@ app.use(async (req, res, next) => {
   next();
 });
 
+app.use(passport.initialize());
+
+// Error handlers
+// Catch unauthorised errors
+app.use(function(err, req, res, next) {
+  if (err.name === 'UnauthorizedError') {
+    res.status(401).json({
+      "message": err.name + ": " + err.message
+    });
+  }
+});
+
 
 // ---
 // Routes
@@ -45,6 +60,8 @@ app.use('/album', routes.album);
 app.use('/tag', routes.tag);
 app.use('/settings', routes.settings);
 app.use('/search', routes.search);
+app.use('/auth', routes.auth);
+app.use('/user', routes.user);
 
 
 // ---

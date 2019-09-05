@@ -4,11 +4,14 @@ import {
 import sizeOf from 'image-size';
 import multer from 'multer';
 import sharp from 'sharp';
-import {
-  S3,
-  getSignedUrl,
-  deleteFromS3
-} from '../utils/s3';
+import { S3, getSignedUrl, deleteFromS3 } from '../utils/s3';
+
+import jwt from 'express-jwt';
+
+const authGuard = jwt({
+  secret: process.env.TOKEN_SECRET,
+  userProperty: 'payload'
+});
 
 const generateS3Key = function (isThumb, dateId, mimetype, thumbSize) {
   const folder = isThumb ? 'thumb/' : 'ori/';
@@ -206,7 +209,7 @@ router.get('/:imageId/big', async (req, res) => {
   }).populate('tags').lean();
 });
 
-router.get('/favorites', async (req, res) => {
+router.get('/favorites', authGuard, async (req, res) => {
   await req.context.models.Image.find({
     favorite: true
   }, (err, images) => {

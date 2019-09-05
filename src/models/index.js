@@ -4,12 +4,13 @@ import Image from './image';
 import Album from './album';
 import Tag from './tag';
 import Settings from './settings';
+import User from './user';
 
 const connectDb = () => {
   return mongoose.connect(process.env.DATABASE_URL, { useNewUrlParser: true });
 };
 
-const models = { Image, Album, Tag, Settings };
+const models = { Image, Album, Tag, Settings, User };
 
 export { connectDb };
 
