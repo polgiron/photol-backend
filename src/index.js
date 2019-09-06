@@ -23,7 +23,7 @@ const corsOptions = {
     } else {
       callback(new Error('Not allowed by CORS'));
     }
-  }
+  }, credentials: true
 };
 app.use(cors(corsOptions));
 
@@ -33,8 +33,7 @@ app.use(cors(corsOptions));
 
 app.use(async (req, res, next) => {
   req.context = {
-    models,
-    // me: await models.User.findByLogin('rwieruch'),
+    models
   };
   next();
 });
@@ -43,7 +42,7 @@ app.use(passport.initialize());
 
 // Error handlers
 // Catch unauthorised errors
-app.use(function(err, req, res, next) {
+app.use((err, req, res, next) => {
   if (err.name === 'UnauthorizedError') {
     res.status(401).json({
       "message": err.name + ": " + err.message
@@ -54,8 +53,9 @@ app.use(function(err, req, res, next) {
 
 // ---
 // Routes
+import { authGuard } from './utils/auth-guard.js';
 
-app.use('/image', routes.image);
+app.use('/image', routes.image, authGuard);
 app.use('/album', routes.album);
 app.use('/tag', routes.tag);
 app.use('/settings', routes.settings);

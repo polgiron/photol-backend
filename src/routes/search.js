@@ -1,9 +1,10 @@
 import { Router } from 'express';
 import * as _ from 'lodash';
+import { authGuard } from '../utils/auth-guard.js';
 
 const router = Router();
 
-router.get('/:searchQuery', async (req, res) => {
+router.get('/:searchQuery', authGuard, async (req, res) => {
   // console.log('search:');
   // console.log(req.params.searchQuery);
 

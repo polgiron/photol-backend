@@ -10,23 +10,27 @@ router.post('/register', async (req, res) => {
     return res.status(500).json({
       error: 'Unvalid email'
     });
-  }
-
-  const user = new User();
-
-  // user.name = req.body.name;
-  user.email = req.body.email;
-
-  user.setPassword(req.body.password);
-
-  user.save(function(err) {
-    if (err) return res.status(500).send(err);
-
-    const token = user.generateJwt();
-    res.status(200).json({
-      'token': token
+  } else if (!req.body.name || req.body.name == '') {
+    return res.status(500).json({
+      error: 'Needs a name'
     });
-  });
+  } else {
+    const user = new User();
+
+    user.name = req.body.name;
+    user.email = req.body.email;
+
+    user.setPassword(req.body.password);
+
+    user.save(function (err) {
+      if (err) return res.status(500).send(err);
+
+      const token = user.generateJwt();
+      res.status(200).json({
+        'token': token
+      });
+    });
+  }
 });
 
 router.post('/login', async (req, res) => {

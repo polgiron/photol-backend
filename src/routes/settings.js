@@ -1,8 +1,9 @@
 import { Router } from 'express';
+import { authGuard } from '../utils/auth-guard.js';
 
 const router = Router();
 
-router.get('/', async (req, res) => {
+router.get('/', authGuard, async (req, res) => {
   await req.context.models.Settings
     .find()
     .exec((err, settings) => {
@@ -16,7 +17,7 @@ router.get('/', async (req, res) => {
     });
 });
 
-router.post('/', async (req, res) => {
+router.post('/', authGuard, async (req, res) => {
   await req.context.models.Settings.create({
     data: req.body.data
   }, (err, settings) => {
@@ -30,22 +31,5 @@ router.post('/', async (req, res) => {
     return res.status(200).send(response);
   });
 });
-
-// router.put('/', async (req, res) => {
-//   await req.context.models.Settings
-//     .findOneAndUpdate(
-//       {},
-//       req.body,
-//       { new: true }
-//     )
-//     .exec((err, settings) => {
-//       if (err) return res.status(500).send(err);
-
-//       console.log('settings');
-//       console.log(settings);
-
-//       return res.send(JSON.stringify({ 'settings': settings }));
-//     });
-// });
 
 export default router;

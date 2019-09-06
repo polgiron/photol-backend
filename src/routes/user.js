@@ -1,8 +1,9 @@
 import { Router } from 'express';
+import { authGuard } from '../utils/auth-guard.js';
 
 const router = Router();
 
-router.get('/email/:email', async (req, res) => {
+router.get('/email/:email', authGuard, async (req, res) => {
   await req.context.models.User
     .findOne({
       email: req.params.email

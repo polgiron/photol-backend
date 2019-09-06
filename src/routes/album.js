@@ -1,9 +1,10 @@
 import { Router } from 'express';
 import { getSignedUrl } from '../utils/s3';
+import { authGuard } from '../utils/auth-guard.js';
 
 const router = Router();
 
-router.get('/all', async (req, res) => {
+router.get('/all', authGuard, async (req, res) => {
   await req.context.models.Album
     .find()
     .populate('cover')
@@ -25,7 +26,7 @@ router.get('/all', async (req, res) => {
     });
 });
 
-router.get('/:albumId', async (req, res) => {
+router.get('/:albumId', authGuard, async (req, res) => {
   await req.context.models.Album
     .findById(req.params.albumId)
     .populate('cover')
@@ -58,7 +59,7 @@ router.get('/:albumId', async (req, res) => {
     });
 });
 
-router.get('/roll/:rollId', async (req, res) => {
+router.get('/roll/:rollId', authGuard, async (req, res) => {
   const album = await req.context.models.Album.findOne({ rollId: req.params.rollId });
   // console.log('album');
   // console.log(album);
@@ -66,14 +67,7 @@ router.get('/roll/:rollId', async (req, res) => {
   return res.send(JSON.stringify({ 'album': album }));
 });
 
-// router.get('/:messageId', async (req, res) => {
-//   const message = await req.context.models.Message.findById(
-//     req.params.messageId,
-//   );
-//   return res.send(message);
-// });
-
-router.post('/', async (req, res) => {
+router.post('/', authGuard, async (req, res) => {
   await req.context.models.Album.create({
     title: req.body.title,
     rollId: req.body.rollId,
@@ -90,7 +84,7 @@ router.post('/', async (req, res) => {
   });
 });
 
-router.put('/:albumId', async (req, res) => {
+router.put('/:albumId', authGuard, async (req, res) => {
   await req.context.models.Album
     .findByIdAndUpdate(
       req.params.albumId,
@@ -110,7 +104,7 @@ router.put('/:albumId', async (req, res) => {
     });
 });
 
-router.delete('/:albumId', async (req, res) => {
+router.delete('/:albumId', authGuard, async (req, res) => {
   await req.context.models.Album.findByIdAndRemove(req.params.albumId, (err, album) => {
     if (err) return res.status(500).send(err);
 
@@ -122,18 +116,5 @@ router.delete('/:albumId', async (req, res) => {
     return res.status(200).send(response);
   });
 });
-
-// router.delete('/:messageId', async (req, res) => {
-//   const message = await req.context.models.Message.findById(
-//     req.params.messageId,
-//   );
-
-//   let result = null;
-//   if (message) {
-//     result = await message.remove();
-//   }
-
-//   return res.send(result);
-// });
 
 export default router;

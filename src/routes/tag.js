@@ -1,8 +1,9 @@
 import { Router } from 'express';
+import { authGuard } from '../utils/auth-guard.js';
 
 const router = Router();
 
-router.post('/', async (req, res) => {
+router.post('/', authGuard, async (req, res) => {
   await req.context.models.Tag.create({
     value: req.body.value,
     images: req.body.images ? req.body.images : []
@@ -31,7 +32,7 @@ router.post('/', async (req, res) => {
   });
 });
 
-router.get('/all', async (req, res) => {
+router.get('/all', authGuard, async (req, res) => {
   await req.context.models.Tag.find((err, tags) => {
     if (err) return res.status(500).send(err);
 
@@ -43,7 +44,7 @@ router.get('/all', async (req, res) => {
   }).lean();
 });
 
-router.delete('/:tagId', async (req, res) => {
+router.delete('/:tagId', authGuard, async (req, res) => {
   await req.context.models.Tag.findByIdAndRemove(req.params.tagId, (err, tag) => {
     if (err) return res.status(500).send(err);
 

@@ -1,17 +1,9 @@
-import {
-  Router
-} from 'express';
+import { Router } from 'express';
 import sizeOf from 'image-size';
 import multer from 'multer';
 import sharp from 'sharp';
 import { S3, getSignedUrl, deleteFromS3 } from '../utils/s3';
-
-import jwt from 'express-jwt';
-
-const authGuard = jwt({
-  secret: process.env.TOKEN_SECRET,
-  userProperty: 'payload'
-});
+import { authGuard } from '../utils/auth-guard.js';
 
 const generateS3Key = function (isThumb, dateId, mimetype, thumbSize) {
   const folder = isThumb ? 'thumb/' : 'ori/';
@@ -59,7 +51,7 @@ const uploadToS3 = function (fileBuffer, dateId, mimetype, isThumb, thumbSize, c
 
 const router = Router();
 
-router.post('/', upload.single('file'), (req, res) => {
+router.post('/', authGuard, upload.single('file'), (req, res) => {
   // console.log('file to upload');
   // console.log(req.file);
 
@@ -108,7 +100,7 @@ router.post('/', upload.single('file'), (req, res) => {
   });
 });
 
-router.put('/:imageId', async (req, res) => {
+router.put('/:imageId', authGuard, async (req, res) => {
   console.log('Updating image');
   console.log(req.body);
 
@@ -147,7 +139,7 @@ router.put('/:imageId', async (req, res) => {
   );
 });
 
-router.get('/all', async (req, res) => {
+router.get('/all', authGuard, async (req, res) => {
   // await req.context.models.Image.find((err, images) => {
   //   if (err) return res.status(500).send(err);
 
@@ -195,7 +187,7 @@ router.get('/all', async (req, res) => {
   });
 });
 
-router.get('/:imageId/big', async (req, res) => {
+router.get('/:imageId/big', authGuard, async (req, res) => {
   await req.context.models.Image.findById(req.params.imageId, (err, image) => {
     if (err) return res.status(500).send(err);
 
@@ -209,7 +201,7 @@ router.get('/:imageId/big', async (req, res) => {
   }).populate('tags').lean();
 });
 
-router.get('/favorites', authGuard, async (req, res) => {
+router.get('/favorites', authGuard, authGuard, async (req, res) => {
   await req.context.models.Image.find({
     favorite: true
   }, (err, images) => {
@@ -223,7 +215,7 @@ router.get('/favorites', authGuard, async (req, res) => {
   }).populate('tags').lean();
 });
 
-router.get('/:imageId/signedUrl', async (req, res) => {
+router.get('/:imageId/signedUrl', authGuard, async (req, res) => {
   await req.context.models.Image.findById(req.params.imageId, (err, image) => {
     if (err) return res.status(500).send(err);
 
@@ -237,33 +229,7 @@ router.get('/:imageId/signedUrl', async (req, res) => {
   }).lean();
 });
 
-// router.get('/:imageId/tags', async (req, res) => {
-//   console.log('Gettings tags by image id');
-//   await req.context.models.Image.findById(req.params.imageId, (err, image) => {
-//     if (err) return res.status(500).send(err);
-
-//     const response = {
-//       'tags': image.tags
-//     };
-
-//     return res.status(200).send(response);
-//   }).populate('tags').lean();
-// });
-
-// router.get('/fav', async (req, res) => {
-//   console.log('Gettings favorites');
-//   await req.context.models.Image.find({ favorite: true }, (err, images) => {
-//     if (err) return res.status(500).send(err);
-
-//     const response = {
-//       'images': images
-//     };
-
-//     return res.status(200).send(response);
-//   }).lean();
-// });
-
-router.delete('/:imageId', async (req, res) => {
+router.delete('/:imageId', authGuard, async (req, res) => {
   await req.context.models.Image.findByIdAndRemove(req.params.imageId, (err, image) => {
     if (err) return res.status(500).send(err);
 
