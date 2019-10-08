@@ -6,14 +6,15 @@ const router = Router();
 router.post('/', authGuard, async (req, res) => {
   await req.context.models.Tag.create({
     value: req.body.value,
-    images: req.body.images ? req.body.images : []
+    images: req.body.images ? req.body.images : [],
+    user: req.payload._id
   }, (err, tag) => {
     if (err) return res.status(500).send(err);
 
     if (req.body.images) {
       req.body.images.forEach(imageId => {
-        req.context.models.Image.findOneAndUpdate(
-          { _id: imageId },
+        req.context.models.Image.findByIdAndUpdate(
+          imageId,
           { $addToSet: { 'tags': tag._id } },
           { safe: true, upsert: true, new: true, useFindAndModify: false },
           function (err, model) {
@@ -33,7 +34,7 @@ router.post('/', authGuard, async (req, res) => {
 });
 
 router.get('/all', authGuard, async (req, res) => {
-  await req.context.models.Tag.find((err, tags) => {
+  await req.context.models.Tag.find({ user: req.payload._id }, (err, tags) => {
     if (err) return res.status(500).send(err);
 
     const response = {
@@ -49,7 +50,7 @@ router.delete('/:tagId', authGuard, async (req, res) => {
     if (err) return res.status(500).send(err);
 
     const response = {
-      message: "Tag successfully deleted",
+      message: 'Tag successfully deleted',
       id: tag._id
     };
 

@@ -1,13 +1,17 @@
 import mongoose from 'mongoose';
 
 const albumSchema = new mongoose.Schema({
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
   title: {
     type: String,
     required: true
   },
   rollId: {
-    type: Number,
-    unique: true
+    type: Number
   },
   date: {
     type: Number

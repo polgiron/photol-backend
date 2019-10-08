@@ -29,14 +29,14 @@ const upload = multer({
 
 const uploadToS3 = function (fileBuffer, dateId, mimetype, isThumb, thumbSize, callback) {
   S3.upload({
-      // ACL: 'public-read',
-      Body: fileBuffer,
-      // Body: fs.createReadStream(file.buffer),
-      Key: generateS3Key(isThumb, dateId, mimetype, thumbSize),
-      // Key: generateS3Key(file.mimetype),
-      ContentType: mimetype
-      // ContentType: 'application/octet-stream' // force download if it's accessed as a top location
-    })
+    // ACL: 'public-read',
+    Body: fileBuffer,
+    // Body: fs.createReadStream(file.buffer),
+    Key: generateS3Key(isThumb, dateId, mimetype, thumbSize),
+    // Key: generateS3Key(file.mimetype),
+    ContentType: mimetype
+    // ContentType: 'application/octet-stream' // force download if it's accessed as a top location
+  })
     // http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3/ManagedUpload.html#httpUploadProgress-event
     .on('httpUploadProgress', event => {
       // console.log('---');
@@ -91,7 +91,8 @@ router.post('/', authGuard, upload.single('file'), (req, res) => {
       ratio: dimensions.width / dimensions.height,
       favorite: req.body.favorite ? req.body.favorite : false,
       // tags: req.body.tags ? req.body.tags : [],
-      date: req.body.date ? req.body.date : null
+      date: req.body.date ? req.body.date : null,
+      user: req.payload._id
     });
 
     res.status(200)
@@ -101,42 +102,37 @@ router.post('/', authGuard, upload.single('file'), (req, res) => {
 });
 
 router.put('/:imageId', authGuard, async (req, res) => {
-  console.log('Updating image');
-  console.log(req.body);
+  // console.log('Updating image');
+  // console.log(req.body);
 
   await req.context.models.Image.findByIdAndUpdate(
     req.params.imageId,
     req.body, {
-      new: true
-    },
-    (err, image) => {
-      if (err) return res.status(500).send(err);
+    new: true
+  }, (err, image) => {
+    if (err) return res.status(500).send(err);
 
-      if (req.body.tags) {
-        // console.log('Updating image tags');
-        req.body.tags.map(tag => {
-          // console.log(tag.value);
-          req.context.models.Tag.findOneAndUpdate({
-              _id: tag._id
-            }, {
-              $addToSet: {
-                'images': image._id
-              }
-            }, {
-              safe: true,
-              upsert: true,
-              new: true,
-              useFindAndModify: false
-            }, (err, tag) => {
-              // console.log(err, tag.images);
-            }
-          );
+    if (req.body.tags) {
+      // console.log('Updating image tags');
+      req.body.tags.map(tag => {
+        // console.log(tag.value);
+        req.context.models.Tag.findByIdAndUpdate(tag._id, {
+          $addToSet: {
+            'images': image._id
+          }
+        }, {
+          safe: true,
+          upsert: true,
+          new: true,
+          useFindAndModify: false
+        }, (err, tag) => {
+          // console.log(err, tag.images);
         });
-      }
-
-      return res.send(image);
+      });
     }
-  );
+
+    return res.send(image);
+  });
 });
 
 router.get('/all', authGuard, async (req, res) => {
@@ -150,6 +146,9 @@ router.get('/all', authGuard, async (req, res) => {
   //   return res.status(200).send(response);
   // }).populate('tags').lean();
 
+  // User id
+  // console.log(req.payload._id);
+
   const options = {
     page: req.query.page,
     limit: req.query.limit,
@@ -157,7 +156,7 @@ router.get('/all', authGuard, async (req, res) => {
     populate: 'tags'
   };
 
-  await req.context.models.Image.paginate({}, options, (err, result) => {
+  await req.context.models.Image.paginate({ user: req.payload._id }, options, (err, result) => {
     // console.log(err);
     // console.log(result.docs.length);
     // result.docs
@@ -171,19 +170,19 @@ router.get('/all', authGuard, async (req, res) => {
     // result.prevPage = null
     // result.pagingCounter = 1
 
-      if (err) return res.status(500).send(err);
+    if (err) return res.status(500).send(err);
 
-      result.docs.forEach(image => {
-        image.signedUrl = getSignedUrl(image, 'small');
-      });
+    result.docs.forEach(image => {
+      image.signedUrl = getSignedUrl(image, 'small');
+    });
 
-      const response = {
-        images: result.docs,
-        hasMore: result.hasNextPage,
-        totalImages: result.totalDocs
-      };
+    const response = {
+      images: result.docs,
+      hasMore: result.hasNextPage,
+      totalImages: result.totalDocs
+    };
 
-      return res.status(200).send(response);
+    return res.status(200).send(response);
   });
 });
 
@@ -203,7 +202,8 @@ router.get('/:imageId/big', authGuard, async (req, res) => {
 
 router.get('/favorites', authGuard, authGuard, async (req, res) => {
   await req.context.models.Image.find({
-    favorite: true
+    favorite: true,
+    user: req.payload._id
   }, (err, images) => {
     if (err) return res.status(500).send(err);
 

@@ -1,12 +1,15 @@
 import mongoose from 'mongoose';
 
 const settingsSchema = new mongoose.Schema({
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    unique: true,
+    required: true
+  },
   data: {
     type: Object
   }
-}, {
-  collection: 'settings',
-  capped: { size: 1024, max: 1 }
 });
 
 const Settings = mongoose.model('Settings', settingsSchema);

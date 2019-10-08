@@ -21,6 +21,7 @@ router.post('/register', async (req, res) => {
     user.email = req.body.email;
 
     user.setPassword(req.body.password);
+    user.initSettings(req.context.models.Settings, user._id);
 
     user.save(function (err) {
       if (err) return res.status(500).send(err);

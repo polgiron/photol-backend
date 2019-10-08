@@ -6,6 +6,9 @@ import Tag from './tag';
 import Settings from './settings';
 import User from './user';
 
+// Remove deprecations logs
+mongoose.set('useFindAndModify', false);
+
 const connectDb = () => {
   return mongoose.connect(process.env.DATABASE_URL, { useNewUrlParser: true });
 };

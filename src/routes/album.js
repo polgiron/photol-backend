@@ -6,7 +6,7 @@ const router = Router();
 
 router.get('/all', authGuard, async (req, res) => {
   await req.context.models.Album
-    .find()
+    .find({ user: req.payload._id })
     .populate('cover')
     .lean()
     .exec((err, albums) => {
@@ -60,10 +60,10 @@ router.get('/:albumId', authGuard, async (req, res) => {
 });
 
 router.get('/roll/:rollId', authGuard, async (req, res) => {
-  const album = await req.context.models.Album.findOne({ rollId: req.params.rollId });
-  // console.log('album');
-  // console.log(album);
-  // return res.send(album);
+  const album = await req.context.models.Album.findOne({
+    rollId: req.params.rollId,
+    user: req.payload._id
+  });
   return res.send(JSON.stringify({ 'album': album }));
 });
 
@@ -71,7 +71,8 @@ router.post('/', authGuard, async (req, res) => {
   await req.context.models.Album.create({
     title: req.body.title,
     rollId: req.body.rollId,
-    date: req.body.date
+    date: req.body.date,
+    user: req.payload._id
   }, (err, album) => {
     if (err) return res.status(500).send(err);
 

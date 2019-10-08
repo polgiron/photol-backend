@@ -75,12 +75,14 @@ connectDb().then(async () => {
     await Promise.all([
       models.Image.deleteMany({}),
       models.Album.deleteMany({}),
+      models.Tag.deleteMany({}),
+      models.User.deleteMany({})
     ]);
 
     // createAlbumWithImages();
   }
 
-  createSettings();
+  // createSettings();
 
   app.listen(process.env.PORT, () => {
     console.log('-----------');
@@ -88,16 +90,16 @@ connectDb().then(async () => {
   });
 });
 
-const createSettings = async () => {
-  const settings = new models.Settings({
-    data: {
-      editMode: true,
-      displayTags: false
-    }
-  });
+// const createSettings = async () => {
+//   const settings = new models.Settings({
+//     data: {
+//       editMode: true,
+//       displayTags: false
+//     }
+//   });
 
-  await settings.save();
-};
+//   await settings.save();
+// };
 
 // const createAlbumWithImages = async () => {
 //   const album = new models.Album({

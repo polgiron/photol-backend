@@ -26,6 +26,17 @@ userSchema.methods.validPassword = function(password) {
   return this.hash === hash;
 };
 
+userSchema.methods.initSettings = function(settingsModel, userId) {
+  const settings = new settingsModel({
+    user: userId,
+    data: {
+      editMode: true,
+      displayTags: false
+    }
+  });
+  settings.save();
+};
+
 userSchema.methods.generateJwt = function() {
   const expiry = new Date();
   expiry.setDate(expiry.getDate() + 7);

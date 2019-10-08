@@ -59,7 +59,8 @@ const performSearch = async function(req, res, searchQueries) {
 const searchDates = async function(req, res, query) {
   if (!isNaN(query)) {
     return req.context.models.Image.find({
-      date: query
+      date: query,
+      user: req.payload._id
     }, (err, images) => {
       if (err) return res.status(500).send(err);
       return images;
@@ -71,7 +72,8 @@ const searchDates = async function(req, res, query) {
 
 const searchTags = async function(req, res, query) {
   return req.context.models.Tag.find({
-    value: { '$regex': query, '$options': 'i' }
+    value: { '$regex': query, '$options': 'i' },
+    user: req.payload._id
   }, (err, tags) => {
     if (err) return res.status(500).send(err);
     return tags;
@@ -85,7 +87,8 @@ const searchTags = async function(req, res, query) {
 
 const searchAlbums = async function(req, res, query) {
   return req.context.models.Album.find({
-    title: { '$regex': query, '$options': 'i' }
+    title: { '$regex': query, '$options': 'i' },
+    user: req.payload._id
   }, (err, albums) => {
     if (err) return res.status(500).send(err);
     return albums;
