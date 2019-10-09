@@ -15,17 +15,18 @@ app.use(express.json({ limit: '50mb', extended: true }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // CORS
-const whitelist = ['https://photol.paulgiron.com', 'http://localhost:4200'];
-const corsOptions = {
-  origin: function (origin, callback) {
-    if (whitelist.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  }, credentials: true
-};
-app.use(cors(corsOptions));
+// const whitelist = ['https://photol.paulgiron.com', 'http://localhost:4200'];
+// const corsOptions = {
+//   origin: function (origin, callback) {
+//     if (whitelist.indexOf(origin) !== -1) {
+//       callback(null, true);
+//     } else {
+//       callback(new Error('Not allowed by CORS'));
+//     }
+//   }, credentials: true
+// };
+// app.use(cors(corsOptions));
+app.use(cors());
 
 
 // ---
