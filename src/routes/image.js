@@ -6,10 +6,9 @@ import { S3, getSignedUrl, deleteFromS3 } from '../utils/s3';
 import { authGuard } from '../utils/auth-guard.js';
 
 const generateS3Key = function (isThumb, dateId, mimetype, thumbSize) {
-  const environment = process.env.PROD == 'true' ? 'prod/' : 'dev/';
   const folder = isThumb ? 'thumb/' : 'ori/';
   const thumbSizePath = isThumb ? `_${thumbSize}` : '';
-  return environment + folder + dateId + thumbSizePath + '.' + mimetype.replace('image/', '');
+  return folder + dateId + thumbSizePath + '.' + mimetype.replace('image/', '');
 };
 
 const generateThumbnails = function (imageBuffer, dateId, mimetype, thumbSize) {

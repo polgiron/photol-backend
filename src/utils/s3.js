@@ -24,8 +24,7 @@ export const getSignedUrl = function(image, size) {
       break;
   }
 
-  let thumbKey = process.env.PROD == 'true' ? 'prod/' : 'dev/';
-  thumbKey += `thumb/${image.s3Id}_${thumbPath}.${image.extension}`;
+  const thumbKey = `thumb/${image.s3Id}_${thumbPath}.${image.extension}`;
 
   const signedUrl = S3.getSignedUrl('getObject', {
     // Bucket: process.env.S3_BUCKET,
@@ -55,10 +54,9 @@ export const deleteS3Object = function(key) {
 
 export const deleteFromS3 = function(image) {
   // console.log('Delete from S3');
-  const env = process.env.PROD == 'true' ? 'prod/' : 'dev/';
-  deleteS3Object(env + `thumb/${image.s3Id}_${process.env.SMALL_THUMB_SIZE}.${image.extension}`);
-  deleteS3Object(env + `thumb/${image.s3Id}_${process.env.BIG_THUMB_SIZE}.${image.extension}`);
-  deleteS3Object(env + `ori/${image.s3Id}.${image.extension}`);
+  deleteS3Object(`thumb/${image.s3Id}_${process.env.SMALL_THUMB_SIZE}.${image.extension}`);
+  deleteS3Object(`thumb/${image.s3Id}_${process.env.BIG_THUMB_SIZE}.${image.extension}`);
+  deleteS3Object(`ori/${image.s3Id}.${image.extension}`);
 }
 
 // export default S3;
