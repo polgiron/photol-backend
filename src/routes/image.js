@@ -1,9 +1,17 @@
-import { Router } from 'express';
+import {
+  Router
+} from 'express';
 import sizeOf from 'image-size';
 import multer from 'multer';
 import sharp from 'sharp';
-import { S3, getSignedUrl, deleteFromS3 } from '../utils/s3';
-import { authGuard } from '../utils/auth-guard.js';
+import {
+  S3,
+  getSignedUrl,
+  deleteFromS3
+} from '../utils/s3';
+import {
+  authGuard
+} from '../utils/auth-guard.js';
 
 const generateS3Key = function (isThumb, dateId, mimetype, thumbSize) {
   const folder = isThumb ? 'thumb/' : 'ori/';
@@ -29,14 +37,14 @@ const upload = multer({
 
 const uploadToS3 = function (fileBuffer, dateId, mimetype, isThumb, thumbSize, callback) {
   S3.upload({
-    // ACL: 'public-read',
-    Body: fileBuffer,
-    // Body: fs.createReadStream(file.buffer),
-    Key: generateS3Key(isThumb, dateId, mimetype, thumbSize),
-    // Key: generateS3Key(file.mimetype),
-    ContentType: mimetype
-    // ContentType: 'application/octet-stream' // force download if it's accessed as a top location
-  })
+      // ACL: 'public-read',
+      Body: fileBuffer,
+      // Body: fs.createReadStream(file.buffer),
+      Key: generateS3Key(isThumb, dateId, mimetype, thumbSize),
+      // Key: generateS3Key(file.mimetype),
+      ContentType: mimetype
+      // ContentType: 'application/octet-stream' // force download if it's accessed as a top location
+    })
     // http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3/ManagedUpload.html#httpUploadProgress-event
     .on('httpUploadProgress', event => {
       // console.log('---');
@@ -92,6 +100,7 @@ router.post('/', authGuard, upload.single('file'), (req, res) => {
       favorite: req.body.favorite ? req.body.favorite : false,
       // tags: req.body.tags ? req.body.tags : [],
       date: req.body.date ? req.body.date : null,
+      // rollId: req.body.rollId ? req.body.rollId : null,
       user: req.payload._id
     });
 
@@ -108,31 +117,31 @@ router.put('/:imageId', authGuard, async (req, res) => {
   await req.context.models.Image.findByIdAndUpdate(
     req.params.imageId,
     req.body, {
-    new: true
-  }, (err, image) => {
-    if (err) return res.status(500).send(err);
+      new: true
+    }, (err, image) => {
+      if (err) return res.status(500).send(err);
 
-    if (req.body.tags) {
-      // console.log('Updating image tags');
-      req.body.tags.map(tag => {
-        // console.log(tag.value);
-        req.context.models.Tag.findByIdAndUpdate(tag._id, {
-          $addToSet: {
-            'images': image._id
-          }
-        }, {
-          safe: true,
-          upsert: true,
-          new: true,
-          useFindAndModify: false
-        }, (err, tag) => {
-          // console.log(err, tag.images);
+      if (req.body.tags) {
+        // console.log('Updating image tags');
+        req.body.tags.map(tag => {
+          // console.log(tag.value);
+          req.context.models.Tag.findByIdAndUpdate(tag._id, {
+            $addToSet: {
+              'images': image._id
+            }
+          }, {
+            safe: true,
+            upsert: true,
+            new: true,
+            useFindAndModify: false
+          }, (err, tag) => {
+            // console.log(err, tag.images);
+          });
         });
-      });
-    }
+      }
 
-    return res.send(image);
-  });
+      return res.send(image);
+    });
 });
 
 router.get('/all', authGuard, async (req, res) => {
@@ -153,10 +162,12 @@ router.get('/all', authGuard, async (req, res) => {
     page: req.query.page,
     limit: req.query.limit,
     lean: true,
-    populate: 'tags'
+    populate: 'tags albums'
   };
 
-  await req.context.models.Image.paginate({ user: req.payload._id }, options, (err, result) => {
+  await req.context.models.Image.paginate({
+    user: req.payload._id
+  }, options, async (err, result) => {
     // console.log(err);
     // console.log(result.docs.length);
     // result.docs
@@ -174,6 +185,7 @@ router.get('/all', authGuard, async (req, res) => {
 
     result.docs.forEach(image => {
       image.signedUrl = getSignedUrl(image, 'small');
+      image.rollId = image.albums[0].rollId;
     });
 
     const response = {
