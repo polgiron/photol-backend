@@ -101,6 +101,21 @@ router.put('/:albumId', authGuard, async (req, res) => {
         album.cover.signedUrl = getSignedUrl(album.cover, 'big');
       }
 
+      // Update all images date in album
+      if (req.body.date && album.images) {
+        req.context.models.Image.updateMany({
+            albums: album._id
+          }, {
+            date: req.body.date
+          }, {
+            new: true
+          },
+          function (err, model) {
+            // console.log(err, model);
+          }
+        );
+      }
+
       return res.send(JSON.stringify({ 'album': album }));
     });
 });
