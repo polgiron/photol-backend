@@ -64,7 +64,7 @@ const searchDates = async function(req, res, query) {
     }, (err, images) => {
       if (err) return res.status(500).send(err);
       return images;
-    }).populate('tags').lean();
+    }).populate('tags albums').lean();
   } else {
     return [];
   }
@@ -80,7 +80,7 @@ const searchTags = async function(req, res, query) {
   }).populate({
     path: 'images',
     populate: {
-      path: 'tags'
+      path: 'tags albums'
     }
   }).lean();
 }
@@ -95,7 +95,7 @@ const searchAlbums = async function(req, res, query) {
   }).populate({
     path: 'images',
     populate: {
-      path: 'tags'
+      path: 'tags albums'
     }
   }).lean();
 }

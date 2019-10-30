@@ -185,7 +185,7 @@ router.get('/all', authGuard, async (req, res) => {
 
     result.docs.forEach(image => {
       image.signedUrl = getSignedUrl(image, 'small');
-      image.rollId = image.albums[0].rollId;
+      // image.rollId = image.albums[0].rollId;
     });
 
     const response = {
