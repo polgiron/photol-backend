@@ -41,10 +41,10 @@ const imageSchema = new mongoose.Schema({
   ratio: {
     type: Number
   },
-  favorite: {
-    type: Boolean
-  },
   date: {
+    type: Number
+  },
+  stars: {
     type: Number
   }
 });

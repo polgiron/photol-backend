@@ -88,19 +88,15 @@ router.post('/', authGuard, upload.single('file'), (req, res) => {
     const dimensions = sizeOf(req.file.buffer);
 
     req.context.models.Image.create({
-      // title: req.body.title,
       albums: req.body.albums ? req.body.albums : [],
-      // s3Key: data.key,
       s3Id: dateId,
       type: req.file.mimetype,
       extension: req.file.mimetype.replace('image/', ''),
       oriWidth: dimensions.width,
       oriHeight: dimensions.height,
       ratio: dimensions.width / dimensions.height,
-      favorite: req.body.favorite ? req.body.favorite : false,
-      // tags: req.body.tags ? req.body.tags : [],
       date: req.body.date ? req.body.date : null,
-      // rollId: req.body.rollId ? req.body.rollId : null,
+      stars: req.body.stars ? req.body.stars : 0,
       user: req.payload._id
     });
 
@@ -214,8 +210,14 @@ router.get('/:imageId/big', authGuard, async (req, res) => {
 
 router.get('/favorites', authGuard, authGuard, async (req, res) => {
   await req.context.models.Image.find({
-    favorite: true,
+    stars: {
+      $gt: 0
+    },
     user: req.payload._id
+  }, null, {
+    sort: {
+      stars: -1
+    }
   }, (err, images) => {
     if (err) return res.status(500).send(err);
 
@@ -224,7 +226,7 @@ router.get('/favorites', authGuard, authGuard, async (req, res) => {
     };
 
     return res.status(200).send(response);
-  }).populate('tags').lean();
+  }).populate('tags albums').lean();
 });
 
 router.get('/:imageId/signedUrl', authGuard, async (req, res) => {
