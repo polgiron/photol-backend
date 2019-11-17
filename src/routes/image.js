@@ -13,19 +13,19 @@ import {
   authGuard
 } from '../utils/auth-guard.js';
 
-const generateS3Key = function (isThumb, dateId, mimetype, thumbSize) {
+const generateS3Key = function (isThumb, dateId, mimetype, thumbSize, email) {
   const folder = isThumb ? 'thumb/' : 'ori/';
   const thumbSizePath = isThumb ? `_${thumbSize}` : '';
-  return folder + dateId + thumbSizePath + '.' + mimetype.replace('image/', '');
+  return email + '/' + folder + dateId + thumbSizePath + '.' + mimetype.replace('image/', '');
 };
 
-const generateThumbnails = function (imageBuffer, dateId, mimetype, thumbSize) {
+const generateThumbnails = function (imageBuffer, dateId, mimetype, thumbSize, email) {
   const thumbnailBuffer = sharp(imageBuffer)
     .resize(Number(thumbSize), Number(thumbSize), {
       fit: 'inside'
     });
 
-  uploadToS3(thumbnailBuffer, dateId, mimetype, true, thumbSize, (err, data) => {
+  uploadToS3(thumbnailBuffer, dateId, mimetype, true, thumbSize, email, (err, data) => {
     // console.log('---');
     // console.log('S3 callback THUMB', err, data);
   });
@@ -35,12 +35,12 @@ const upload = multer({
   // limits: { fileSize: 10 * 1024 * 1024 }
 });
 
-const uploadToS3 = function (fileBuffer, dateId, mimetype, isThumb, thumbSize, callback) {
+const uploadToS3 = function (fileBuffer, dateId, mimetype, isThumb, thumbSize, email, callback) {
   S3.upload({
       // ACL: 'public-read',
       Body: fileBuffer,
       // Body: fs.createReadStream(file.buffer),
-      Key: generateS3Key(isThumb, dateId, mimetype, thumbSize),
+      Key: generateS3Key(isThumb, dateId, mimetype, thumbSize, email),
       // Key: generateS3Key(file.mimetype),
       ContentType: mimetype
       // ContentType: 'application/octet-stream' // force download if it's accessed as a top location
@@ -89,10 +89,10 @@ router.post('/', authGuard, upload.single('file'), (req, res) => {
     order: req.body.order
   });
 
-  generateThumbnails(req.file.buffer, dateId, req.file.mimetype, process.env.SMALL_THUMB_SIZE);
-  generateThumbnails(req.file.buffer, dateId, req.file.mimetype, process.env.BIG_THUMB_SIZE);
+  generateThumbnails(req.file.buffer, dateId, req.file.mimetype, process.env.SMALL_THUMB_SIZE, req.payload.email);
+  generateThumbnails(req.file.buffer, dateId, req.file.mimetype, process.env.BIG_THUMB_SIZE, req.payload.email);
 
-  uploadToS3(req.file.buffer, dateId, req.file.mimetype, false, null, (err, data) => {
+  uploadToS3(req.file.buffer, dateId, req.file.mimetype, false, null, req.payload.email, (err, data) => {
     // console.log('---');
     // console.log('S3 callback ORI', err, data);
 
@@ -181,7 +181,7 @@ router.get('/all', authGuard, async (req, res) => {
     if (err) return res.status(500).send(err);
 
     result.docs.forEach(image => {
-      image.signedUrl = getSignedUrl(image, 'small');
+      image.signedUrl = getSignedUrl(image, req.payload.email, 'small');
       // image.rollId = image.albums[0].rollId;
     });
 
@@ -199,7 +199,7 @@ router.get('/:imageId/big', authGuard, async (req, res) => {
   await req.context.models.Image.findById(req.params.imageId, (err, image) => {
     if (err) return res.status(500).send(err);
 
-    image.signedUrl = getSignedUrl(image, 'big');
+    image.signedUrl = getSignedUrl(image, req.payload.email, 'big');
 
     const response = {
       'image': image
@@ -234,7 +234,7 @@ router.get('/:imageId/signedUrl', authGuard, async (req, res) => {
   await req.context.models.Image.findById(req.params.imageId, (err, image) => {
     if (err) return res.status(500).send(err);
 
-    const signedUrl = getSignedUrl(image, req.query.size);
+    const signedUrl = getSignedUrl(image, req.payload.email, req.query.size);
 
     const response = {
       'signedUrl': signedUrl

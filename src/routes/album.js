@@ -22,7 +22,7 @@ router.get('/all', authGuard, async (req, res) => {
 
       albums.forEach(album => {
         if (album.cover) {
-          album.cover.signedUrl = getSignedUrl(album.cover, 'small');
+          album.cover.signedUrl = getSignedUrl(album.cover, req.payload.email, 'small');
         }
       });
 
@@ -46,7 +46,7 @@ router.get('/:albumId', authGuard, async (req, res) => {
         }
       },
       populate: {
-        path: 'tags'
+        path: 'tags albums user'
       }
     })
     .lean()
@@ -56,12 +56,12 @@ router.get('/:albumId', authGuard, async (req, res) => {
       if (album && album.images) {
         album.images.forEach(image => {
           // console.log('----');
-          image.signedUrl = getSignedUrl(image, 'small');
+          image.signedUrl = getSignedUrl(image, req.payload.email, 'small');
         });
       }
 
       if (album && album.cover) {
-        album.cover.signedUrl = getSignedUrl(album.cover, 'big');
+        album.cover.signedUrl = getSignedUrl(album.cover, req.payload.email, 'big');
       }
 
       const response = {
@@ -114,7 +114,7 @@ router.put('/:albumId', authGuard, async (req, res) => {
       if (err) return res.status(500).send(err);
 
       if (req.body.cover) {
-        album.cover.signedUrl = getSignedUrl(album.cover, 'big');
+        album.cover.signedUrl = getSignedUrl(album.cover, req.payload.email, 'big');
       }
 
       // Update all images date in album

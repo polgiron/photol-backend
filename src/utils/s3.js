@@ -9,7 +9,7 @@ aws.config.update({
 // const s3 = new aws.S3();
 export const S3 = new aws.S3({ params: { Bucket: process.env.S3_BUCKET } });
 
-export const getSignedUrl = function(image, size) {
+export const getSignedUrl = function(image, email, size) {
   let thumbPath;
 
   switch (size) {
@@ -24,7 +24,7 @@ export const getSignedUrl = function(image, size) {
       break;
   }
 
-  const thumbKey = `thumb/${image.s3Id}_${thumbPath}.${image.extension}`;
+  const thumbKey = `${email}/thumb/${image.s3Id}_${thumbPath}.${image.extension}`;
 
   const signedUrl = S3.getSignedUrl('getObject', {
     // Bucket: process.env.S3_BUCKET,

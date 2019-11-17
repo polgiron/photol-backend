@@ -80,27 +80,6 @@ imageSchema.pre('save', function (next) {
   next();
 });
 
-imageSchema.post('find', function (images) {
-  images.forEach(image => {
-    image.signedUrl = getSignedUrl(image, 'small');
-  });
-});
-
-// imageSchema.pre('remove', function (next) {
-//   console.log('PRE REMOVE IMAGE');
-// //   const image = this;
-
-// //   deleteFromS3(`ori/${image.s3Id}.${image.extension}`);
-// //   // deleteFromS3(`thumb/${image.s3Id}_${thumbPath}.${image.extension}`);
-
-// //   // image.model('Album').update(
-// //   //   { images: { $in: image.albums } },
-// //   //   { $pull: { image: image._id } },
-// //   //   { multi: true },
-// //   //   next
-// //   // );
-// });
-
 const Image = mongoose.model('Image', imageSchema);
 
 export default Image;
