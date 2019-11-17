@@ -73,6 +73,22 @@ router.post('/', authGuard, upload.single('file'), (req, res) => {
 
   const dateId = Date.now().toString();
 
+  // BDD
+  const dimensions = sizeOf(req.file.buffer);
+  req.context.models.Image.create({
+    albums: req.body.albums ? req.body.albums : [],
+    s3Id: dateId,
+    type: req.file.mimetype,
+    extension: req.file.mimetype.replace('image/', ''),
+    oriWidth: dimensions.width,
+    oriHeight: dimensions.height,
+    ratio: dimensions.width / dimensions.height,
+    date: req.body.date ? req.body.date : null,
+    stars: req.body.stars ? req.body.stars : 0,
+    user: req.payload._id,
+    order: req.body.order
+  });
+
   generateThumbnails(req.file.buffer, dateId, req.file.mimetype, process.env.SMALL_THUMB_SIZE);
   generateThumbnails(req.file.buffer, dateId, req.file.mimetype, process.env.BIG_THUMB_SIZE);
 
@@ -84,21 +100,6 @@ router.post('/', authGuard, upload.single('file'), (req, res) => {
       console.error(err);
       return res.status(500).send('failed to upload to s3').end();
     }
-
-    const dimensions = sizeOf(req.file.buffer);
-
-    req.context.models.Image.create({
-      albums: req.body.albums ? req.body.albums : [],
-      s3Id: dateId,
-      type: req.file.mimetype,
-      extension: req.file.mimetype.replace('image/', ''),
-      oriWidth: dimensions.width,
-      oriHeight: dimensions.height,
-      ratio: dimensions.width / dimensions.height,
-      date: req.body.date ? req.body.date : null,
-      stars: req.body.stars ? req.body.stars : 0,
-      user: req.payload._id
-    });
 
     res.status(200)
       .send('File uploaded to S3')

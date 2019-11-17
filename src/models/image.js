@@ -46,6 +46,9 @@ const imageSchema = new mongoose.Schema({
   },
   stars: {
     type: Number
+  },
+  order: {
+    type: Number
   }
 });
 

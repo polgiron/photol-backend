@@ -1,12 +1,20 @@
-import { Router } from 'express';
-import { getSignedUrl } from '../utils/s3';
-import { authGuard } from '../utils/auth-guard.js';
+import {
+  Router
+} from 'express';
+import {
+  getSignedUrl
+} from '../utils/s3';
+import {
+  authGuard
+} from '../utils/auth-guard.js';
 
 const router = Router();
 
 router.get('/all', authGuard, async (req, res) => {
   await req.context.models.Album
-    .find({ user: req.payload._id })
+    .find({
+      user: req.payload._id
+    })
     .populate('cover')
     .lean()
     .exec((err, albums) => {
@@ -32,6 +40,11 @@ router.get('/:albumId', authGuard, async (req, res) => {
     .populate('cover')
     .populate({
       path: 'images',
+      options: {
+        sort: {
+          'order': 1
+        }
+      },
       populate: {
         path: 'tags'
       }
@@ -64,7 +77,9 @@ router.get('/roll/:rollId', authGuard, async (req, res) => {
     rollId: req.params.rollId,
     user: req.payload._id
   });
-  return res.send(JSON.stringify({ 'album': album }));
+  return res.send(JSON.stringify({
+    'album': album
+  }));
 });
 
 router.post('/', authGuard, async (req, res) => {
@@ -89,8 +104,9 @@ router.put('/:albumId', authGuard, async (req, res) => {
   await req.context.models.Album
     .findByIdAndUpdate(
       req.params.albumId,
-      req.body,
-      { new: true }
+      req.body, {
+        new: true
+      }
     )
     .populate('cover')
     .lean()
@@ -116,7 +132,9 @@ router.put('/:albumId', authGuard, async (req, res) => {
         );
       }
 
-      return res.send(JSON.stringify({ 'album': album }));
+      return res.send(JSON.stringify({
+        'album': album
+      }));
     });
 });
 
