@@ -222,6 +222,10 @@ router.get('/favorites', authGuard, authGuard, async (req, res) => {
   }, (err, images) => {
     if (err) return res.status(500).send(err);
 
+    images.forEach(image => {
+      image.signedUrl = getSignedUrl(image, req.payload.email, 'small');
+    });
+
     const response = {
       'images': images
     };
