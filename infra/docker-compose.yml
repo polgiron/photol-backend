@@ -1,0 +1,11 @@
+# docker-compose for dev environment
+version: '3.5'
+services:
+  mongo:
+    image: mongo
+    container_name: mongodb
+    volumes:
+      - .mongo-volume:/data/db
+    ports:
+      - "27017:27017"
+  
