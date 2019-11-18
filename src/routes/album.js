@@ -1,12 +1,6 @@
-import {
-  Router
-} from 'express';
-import {
-  getSignedUrl
-} from '../utils/s3';
-import {
-  authGuard
-} from '../utils/auth-guard.js';
+import { Router } from 'express';
+import { getSignedUrl } from '../utils/s3';
+import { authGuard } from '../utils/auth-guard.js';
 
 const router = Router();
 

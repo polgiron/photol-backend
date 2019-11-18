@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import * as _ from 'lodash';
 import { authGuard } from '../utils/auth-guard.js';
+import { getSignedUrl } from '../utils/s3';
 
 const router = Router();
 
@@ -52,6 +53,10 @@ const performSearch = async function(req, res, searchQueries) {
   //     return JSON.stringify(obj) === JSON.stringify(image);
   //   });
   // });
+
+  results.forEach(image => {
+    image.signedUrl = getSignedUrl(image, req.payload.email, 'small');
+  });
 
   return results;
 }
