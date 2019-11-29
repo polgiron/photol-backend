@@ -109,35 +109,68 @@ router.post('/', authGuard, upload.single('file'), (req, res) => {
 
 router.put('/:imageId', authGuard, async (req, res) => {
   // console.log('Updating image');
-  // console.log(req.body);
+  // console.log(req.body.tags);
 
   await req.context.models.Image.findByIdAndUpdate(
     req.params.imageId,
     req.body, {
-      new: true
+      // new: true
     }, (err, image) => {
       if (err) return res.status(500).send(err);
 
+      // console.log('After updated image');
+      // console.log(image.tags);
+
       if (req.body.tags) {
-        // console.log('Updating image tags');
-        req.body.tags.map(tag => {
-          // console.log(tag.value);
-          req.context.models.Tag.findByIdAndUpdate(tag._id, {
-            $addToSet: {
-              'images': image._id
-            }
-          }, {
-            safe: true,
-            upsert: true,
-            new: true,
-            useFindAndModify: false
-          }, (err, tag) => {
-            // console.log(err, tag.images);
+        // Is there any new tags
+        if (req.body.tags.length > image.tags.length) {
+          const bodyTagsIds = [];
+          req.body.tags.map(tag => {
+            bodyTagsIds.push(tag._id);
           });
-        });
+          const newTagIds = bodyTagsIds.filter(tag => !image.tags.includes(tag));
+          // console.log('----difference');
+          // console.log(newTagIds);
+          newTagIds.map(tagId => {
+            req.context.models.Tag.findByIdAndUpdate(tagId, {
+              lastUsed: new Date(),
+              $addToSet: {
+                'images': image._id
+              }
+            }, {
+              safe: true,
+              upsert: true,
+              new: true,
+              useFindAndModify: false
+            }, (err, tag) => {
+              // console.log(err, tag.images);
+            });
+          });
+        }
+
+        // console.log('Updating image tags');
+        // req.body.tags.map(tag => {
+        //   // console.log(tag.value);
+        //   req.context.models.Tag.findByIdAndUpdate(tag._id, {
+        //     $addToSet: {
+        //       'images': image._id
+        //     }
+        //   }, {
+        //     safe: true,
+        //     upsert: true,
+        //     new: true,
+        //     useFindAndModify: false
+        //   }, (err, tag) => {
+        //     // console.log(err, tag.images);
+        //   });
+        // });
       }
 
-      return res.send(image);
+      const response = {
+        errorCode: 0
+      };
+
+      return res.status(200).send(response);
     });
 });
 

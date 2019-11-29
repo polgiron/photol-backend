@@ -14,7 +14,10 @@ const tagSchema = new mongoose.Schema({
   images: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Image'
-  }]
+  }],
+  lastUsed: {
+    type: Date
+  }
 });
 
 // tagSchema.pre('save', function (next) {
