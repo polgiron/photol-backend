@@ -193,7 +193,7 @@ router.get('/all', authGuard, async (req, res) => {
     limit: req.query.limit,
     lean: true,
     populate: 'tags albums',
-    sort: {_id: -1}
+    sort: {date: -1}
   };
 
   await req.context.models.Image.paginate({
