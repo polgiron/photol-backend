@@ -8,6 +8,10 @@ router.get('/all', authGuard, async (req, res) => {
   await req.context.models.Album
     .find({
       user: req.payload._id
+    }, null, {
+      sort: {
+        rollId: -1
+      }
     })
     .populate('cover')
     .lean()
