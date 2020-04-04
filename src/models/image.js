@@ -1,7 +1,4 @@
 import mongoose from 'mongoose';
-import {
-  getSignedUrl
-} from '../utils/s3';
 import mongoosePaginate from 'mongoose-paginate-v2';
 
 const imageSchema = new mongoose.Schema({
@@ -49,6 +46,9 @@ const imageSchema = new mongoose.Schema({
   },
   order: {
     type: Number
+  },
+  toPrint: {
+    type: Boolean
   }
 });
 
