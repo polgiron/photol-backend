@@ -244,7 +244,7 @@ router.get('/:imageId/big', authGuard, async (req, res) => {
   }).populate('tags').lean();
 });
 
-router.get('/favorites', authGuard, authGuard, async (req, res) => {
+router.get('/favorites', authGuard, async (req, res) => {
   await req.context.models.Image.find({
     stars: {
       $gt: 0
@@ -269,7 +269,7 @@ router.get('/favorites', authGuard, authGuard, async (req, res) => {
   }).populate('tags albums').lean();
 });
 
-router.get('/toprint', authGuard, authGuard, async (req, res) => {
+router.get('/toprint', authGuard, async (req, res) => {
   await req.context.models.Image.find({
     toPrint: true,
     user: req.payload._id
