@@ -237,6 +237,11 @@ router.get('/:imageId/big', authGuard, async (req, res) => {
   await req.context.models.Image.findById(req.params.imageId, (err, image) => {
     if (err) return res.status(500).send(err);
 
+    // WORKAROUND for /public
+    let email = 'pol.giron@gmail.com';
+    if (req.payload && req.payload.email) {
+      email = req.payload.email;
+    }
     image.signedUrl = getSignedUrl(image, req.payload.email, 'big');
 
     const response = {
