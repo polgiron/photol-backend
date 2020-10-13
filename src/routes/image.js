@@ -87,7 +87,8 @@ router.post('/', authGuard, upload.single('file'), (req, res) => {
     stars: req.body.stars ? req.body.stars : 0,
     user: req.payload._id,
     order: req.body.order,
-    toPrint: req.body.toPrint ? req.body.toPrint : false
+    toPrint: req.body.toPrint ? req.body.toPrint : false,
+    public: req.body.public ? req.body.public : false
   });
 
   generateThumbnails(req.file.buffer, dateId, req.file.mimetype, process.env.SMALL_THUMB_SIZE, req.payload.email);
@@ -272,6 +273,25 @@ router.get('/favorites', authGuard, async (req, res) => {
 router.get('/toprint', authGuard, async (req, res) => {
   await req.context.models.Image.find({
     toPrint: true,
+    user: req.payload._id
+  }, null, (err, images) => {
+    if (err) return res.status(500).send(err);
+
+    images.forEach(image => {
+      image.signedUrl = getSignedUrl(image, req.payload.email, 'small');
+    });
+
+    const response = {
+      'images': images
+    };
+
+    return res.status(200).send(response);
+  }).populate('tags albums').lean();
+});
+
+router.get('/public', authGuard, async (req, res) => {
+  await req.context.models.Image.find({
+    public: true,
     user: req.payload._id
   }, null, (err, images) => {
     if (err) return res.status(500).send(err);

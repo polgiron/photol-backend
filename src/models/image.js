@@ -49,6 +49,9 @@ const imageSchema = new mongoose.Schema({
   },
   toPrint: {
     type: Boolean
+  },
+  public: {
+    type: Boolean
   }
 });
 
