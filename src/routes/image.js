@@ -292,7 +292,7 @@ router.get('/toprint', authGuard, async (req, res) => {
 router.get('/public', async (req, res) => {
   await req.context.models.Image.find({
     public: true,
-    user: req.payload._id
+    // user: req.payload._id
   }, null, (err, images) => {
     if (err) return res.status(500).send(err);
 
