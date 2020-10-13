@@ -195,7 +195,9 @@ router.get('/all', authGuard, async (req, res) => {
     limit: req.query.limit,
     lean: true,
     populate: 'tags albums',
-    sort: {date: -1}
+    sort: {
+      date: -1
+    }
   };
 
   await req.context.models.Image.paginate({
@@ -296,8 +298,14 @@ router.get('/public', async (req, res) => {
   }, null, (err, images) => {
     if (err) return res.status(500).send(err);
 
+    // WORKAROUND for /public
+    let email = 'pol.giron@gmail.com';
+    if (req.payload && req.payload.email) {
+      email = req.payload.email;
+    }
+
     images.forEach(image => {
-      image.signedUrl = getSignedUrl(image, req.payload.email, 'small');
+      image.signedUrl = getSignedUrl(image, email, 'small');
     });
 
     const response = {
