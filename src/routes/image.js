@@ -289,7 +289,7 @@ router.get('/toprint', authGuard, async (req, res) => {
   }).populate('tags albums').lean();
 });
 
-router.get('/public', authGuard, async (req, res) => {
+router.get('/public', async (req, res) => {
   await req.context.models.Image.find({
     public: true,
     user: req.payload._id
