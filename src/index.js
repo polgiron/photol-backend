@@ -53,9 +53,8 @@ app.use((err, req, res, next) => {
 
 // ---
 // Routes
-import { authGuard } from './utils/auth-guard.js';
 
-app.use('/image', routes.image, authGuard);
+app.use('/image', routes.image);
 app.use('/album', routes.album);
 app.use('/tag', routes.tag);
 app.use('/settings', routes.settings);
