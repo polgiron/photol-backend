@@ -237,11 +237,6 @@ router.get('/:imageId/big', authGuard, async (req, res) => {
   await req.context.models.Image.findById(req.params.imageId, (err, image) => {
     if (err) return res.status(500).send(err);
 
-    // WORKAROUND for /public
-    let email = 'pol.giron@gmail.com';
-    if (req.payload && req.payload.email) {
-      email = req.payload.email;
-    }
     image.signedUrl = getSignedUrl(image, req.payload.email, 'big');
 
     const response = {
@@ -296,31 +291,6 @@ router.get('/toprint', authGuard, async (req, res) => {
   }).populate('tags albums').lean();
 });
 
-router.get('/public', async (req, res) => {
-  await req.context.models.Image.find({
-    public: true,
-    // user: req.payload._id
-  }, null, (err, images) => {
-    if (err) return res.status(500).send(err);
-
-    // WORKAROUND for /public
-    let email = 'pol.giron@gmail.com';
-    if (req.payload && req.payload.email) {
-      email = req.payload.email;
-    }
-
-    images.forEach(image => {
-      image.signedUrl = getSignedUrl(image, email, 'small');
-    });
-
-    const response = {
-      'images': images
-    };
-
-    return res.status(200).send(response);
-  }).populate('tags albums').lean();
-});
-
 router.get('/:imageId/signedUrl', authGuard, async (req, res) => {
   await req.context.models.Image.findById(req.params.imageId, (err, image) => {
     if (err) return res.status(500).send(err);
@@ -348,6 +318,43 @@ router.delete('/:imageId', authGuard, async (req, res) => {
 
     return res.status(200).send(response);
   });
+});
+
+// PUBLIC
+
+router.get('/public', async (req, res) => {
+  await req.context.models.Image.find({
+    public: true
+  }, null, (err, images) => {
+    if (err) return res.status(500).send(err);
+
+    images.forEach(image => {
+      image.signedUrl = getSignedUrl(image, 'pol.giron@gmail.com', 'small');
+    });
+
+    const response = {
+      'images': images
+    };
+
+    return res.status(200).send(response);
+  }).populate('tags albums').lean();
+});
+
+router.get('/:imageId/big/public', async (req, res) => {
+  await req.context.models.Image.findById(req.params.imageId, (err, image) => {
+    if (err) return res.status(500).send(err);
+    if (!image.public) return res.status(200).send({
+      'errorMsg': 'Image is not public'
+    });
+
+    image.signedUrl = getSignedUrl(image, 'pol.giron@gmail.com', 'big');
+
+    const response = {
+      'image': image
+    };
+
+    return res.status(200).send(response);
+  }).populate('tags').lean();
 });
 
 export default router;
