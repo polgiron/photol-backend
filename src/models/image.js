@@ -52,6 +52,20 @@ const imageSchema = new mongoose.Schema({
   },
   public: {
     type: Boolean
+  },
+  darkroomSettings: {
+    type: {
+      duration: Number,
+      contrast: Number,
+      aperture: Number,
+      note: String
+    },
+    default: {
+      duration: null,
+      contrast: null,
+      aperture: null,
+      note: null
+    }
   }
 });
 
