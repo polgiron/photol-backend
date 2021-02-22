@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start:db": "docker-compose up -d photoldb && ./src/tools/wait-for-db.sh",
-    "start": "nodemon --exec babel-node src/index.js",
+    "start": "yarn start:db && nodemon --exec babel-node src/index.js",
     "migration": "babel-node src/migrations/darkroom-settings-migration.js"
   },
   "keywords": [],
