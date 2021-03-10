@@ -9,9 +9,5 @@ services:
     image: mongo:latest
     ports:
       - "27017:27017"
-    environment:
-      POSTGRES_USER: photol
-      POSTGRES_PASSWORD: photol
-      POSTGRES_DB: photol
     volumes:
       - photol-db-data:/data/db
