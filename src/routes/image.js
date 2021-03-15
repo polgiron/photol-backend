@@ -60,11 +60,12 @@ const uploadToS3 = function (fileBuffer, dateId, mimetype, isThumb, thumbSize, e
 const router = Router();
 
 router.post('/', authGuard, upload.single('file'), (req, res) => {
-  // console.log('file to upload');
-  // console.log(req.file);
+  console.log('file to upload');
+  console.log(req);
+  console.log(req.file);
 
   if (!req.file) {
-    return res.status(403).send('expect 1 file upload named file1').end();
+    return res.status(403).send('expect 1 file upload named file').end();
   }
 
   if (!/^image\/(jpe?g|png|gif)$/i.test(req.file.mimetype)) {
