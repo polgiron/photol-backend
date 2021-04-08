@@ -1,32 +1,44 @@
-import express from 'express';
-import cors from 'cors';
-import 'dotenv/config';
-import passport from 'passport';
+import express from 'express'
+import cors from 'cors'
+import 'dotenv/config'
+import passport from 'passport'
 
-import models, { connectDb } from './models';
-import routes from './routes';
+import models, { connectDb } from './models'
+import routes from './routes'
 
-import './config/passport';
+import './config/passport'
 
-const app = express();
+const app = express()
 
 // Body parser express built in
-app.use(express.json({ limit: '50mb', extended: true }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+app.use(
+  express.json({
+    limit: '50mb',
+    extended: true
+  })
+)
+app.use(
+  express.urlencoded({
+    limit: '50mb',
+    extended: true
+  })
+)
 
 // CORS
-const whitelist = ['https://photol.paulgiron.com', 'http://localhost:4200'];
+const whitelist = ['https://photol.paulgiron.com', 'http://localhost:4200']
 const corsOptions = {
   origin: function (origin, callback) {
     if (whitelist.indexOf(origin) !== -1) {
-      callback(null, true);
+      callback(null, true)
     } else {
-      callback(new Error('Not allowed by CORS'));
+      callback(new Error('Not allowed by CORS'))
     }
-  }, credentials: true
-};
-app.use(cors(corsOptions));
-
+  },
+  credentials: true
+}
+// app.options('*', cors())
+app.use(cors(corsOptions))
+// app.use(cors());
 
 // ---
 // App middleware
@@ -34,39 +46,37 @@ app.use(cors(corsOptions));
 app.use(async (req, res, next) => {
   req.context = {
     models
-  };
-  next();
-});
+  }
+  next()
+})
 
-app.use(passport.initialize());
+app.use(passport.initialize())
 
 // Error handlers
 // Catch unauthorised errors
 app.use((err, req, res, next) => {
   if (err.name === 'UnauthorizedError') {
     res.status(401).json({
-      "message": err.name + ": " + err.message
-    });
+      message: err.name + ': ' + err.message
+    })
   }
-});
-
+})
 
 // ---
 // Routes
 
-app.use('/image', routes.image);
-app.use('/album', routes.album);
-app.use('/tag', routes.tag);
-app.use('/settings', routes.settings);
-app.use('/search', routes.search);
-app.use('/auth', routes.auth);
-app.use('/user', routes.user);
-
+app.use('/image', routes.image)
+app.use('/album', routes.album)
+app.use('/tag', routes.tag)
+app.use('/settings', routes.settings)
+app.use('/search', routes.search)
+app.use('/auth', routes.auth)
+app.use('/user', routes.user)
 
 // ---
 // Start server
 
-const eraseDatabaseOnSync = false;
+const eraseDatabaseOnSync = false
 // const eraseDatabaseOnSync = true;
 
 connectDb().then(async () => {
@@ -76,7 +86,7 @@ connectDb().then(async () => {
       models.Album.deleteMany({}),
       models.Tag.deleteMany({}),
       models.User.deleteMany({})
-    ]);
+    ])
 
     // createAlbumWithImages();
   }
@@ -84,10 +94,10 @@ connectDb().then(async () => {
   // createSettings();
 
   app.listen(process.env.PORT, () => {
-    console.log('-----------');
-    console.log(`listening on port ${process.env.PORT}!`);
-  });
-});
+    console.log('-----------')
+    console.log(`listening on port ${process.env.PORT}!`)
+  })
+})
 
 // const createSettings = async () => {
 //   const settings = new models.Settings({
