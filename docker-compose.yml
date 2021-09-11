@@ -10,4 +10,4 @@ services:
     ports:
       - '27017:27017'
     volumes:
-      - /home/pol/data:/data/db
+      - photol-db-data:/data/db
