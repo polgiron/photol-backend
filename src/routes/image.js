@@ -1,81 +1,105 @@
-import {
-  Router
-} from 'express';
-import sizeOf from 'image-size';
-import multer from 'multer';
-import sharp from 'sharp';
-import {
-  S3,
-  getSignedUrl,
-  deleteFromS3
-} from '../utils/s3';
-import {
-  authGuard
-} from '../utils/auth-guard.js';
+import { Router } from 'express'
+import sizeOf from 'image-size'
+import multer from 'multer'
+import sharp from 'sharp'
+import { S3, getSignedUrl, deleteFromS3 } from '../utils/s3'
+import { authGuard } from '../utils/auth-guard.js'
 
 const generateS3Key = function (isThumb, dateId, mimetype, thumbSize, email) {
-  const folder = isThumb ? 'thumb/' : 'ori/';
-  const thumbSizePath = isThumb ? `_${thumbSize}` : '';
-  return email + '/' + folder + dateId + thumbSizePath + '.' + mimetype.replace('image/', '');
-};
+  const folder = isThumb ? 'thumb/' : 'ori/'
+  const thumbSizePath = isThumb ? `_${thumbSize}` : ''
+  return (
+    email +
+    '/' +
+    folder +
+    dateId +
+    thumbSizePath +
+    '.' +
+    mimetype.replace('image/', '')
+  )
+}
 
-const generateThumbnails = function (imageBuffer, dateId, mimetype, thumbSize, email) {
-  const thumbnailBuffer = sharp(imageBuffer)
-    .resize(Number(thumbSize), Number(thumbSize), {
+const generateThumbnails = function (
+  imageBuffer,
+  dateId,
+  mimetype,
+  thumbSize,
+  email
+) {
+  const thumbnailBuffer = sharp(imageBuffer).resize(
+    Number(thumbSize),
+    Number(thumbSize),
+    {
       fit: 'inside'
-    });
+    }
+  )
 
-  uploadToS3(thumbnailBuffer, dateId, mimetype, true, thumbSize, email, (err, data) => {
-    // console.log('---');
-    // console.log('S3 callback THUMB', err, data);
-  });
-};
+  uploadToS3(
+    thumbnailBuffer,
+    dateId,
+    mimetype,
+    true,
+    thumbSize,
+    email,
+    (err, data) => {
+      // console.log('---');
+      // console.log('S3 callback THUMB', err, data);
+    }
+  )
+}
 
 const upload = multer({
   // limits: { fileSize: 10 * 1024 * 1024 }
-});
+})
 
-const uploadToS3 = function (fileBuffer, dateId, mimetype, isThumb, thumbSize, email, callback) {
+const uploadToS3 = function (
+  fileBuffer,
+  dateId,
+  mimetype,
+  isThumb,
+  thumbSize,
+  email,
+  callback
+) {
   S3.upload({
-      // ACL: 'public-read',
-      Body: fileBuffer,
-      // Body: fs.createReadStream(file.buffer),
-      Key: generateS3Key(isThumb, dateId, mimetype, thumbSize, email),
-      // Key: generateS3Key(file.mimetype),
-      ContentType: mimetype
-      // ContentType: 'application/octet-stream' // force download if it's accessed as a top location
-    })
+    // ACL: 'public-read',
+    Body: fileBuffer,
+    // Body: fs.createReadStream(file.buffer),
+    Key: generateS3Key(isThumb, dateId, mimetype, thumbSize, email),
+    // Key: generateS3Key(file.mimetype),
+    ContentType: mimetype
+    // ContentType: 'application/octet-stream' // force download if it's accessed as a top location
+  })
     // http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3/ManagedUpload.html#httpUploadProgress-event
-    .on('httpUploadProgress', event => {
+    .on('httpUploadProgress', (event) => {
       // console.log('---');
       // console.log('event', event);
     })
-    .send(callback);
-};
-
+    .send(callback)
+}
 
 // ---
 // Routes
 
-const router = Router();
+const router = Router()
 
 router.post('/', authGuard, upload.single('file'), (req, res) => {
-  console.log('file to upload');
-  console.log(req);
-  console.log(req.file);
+  console.log('file to upload')
+  console.log(req)
+  console.log(req.file)
 
   if (!req.file) {
-    return res.status(403).send('expect 1 file upload named file').end();
+    return res.status(403).send('expect 1 file upload named file').end()
   }
 
   if (!/^image\/(jpe?g|png|gif)$/i.test(req.file.mimetype)) {
-    return res.status(403).send('expect image file').end();
+    return res.status(403).send('expect image file').end()
   }
 
-  const dateId = Date.now().toString();
+  const dateId = Date.now().toString()
 
   // BDD
-  const dimensions = sizeOf(req.file.buffer);
+  const dimensions = sizeOf(req.file.buffer)
   req.context.models.Image.create({
     albums: req.body.albums ? req.body.albums : [],
     s3Id: dateId,
@@ -90,25 +114,43 @@ router.post('/', authGuard, upload.single('file'), (req, res) => {
     order: req.body.order,
     toPrint: req.body.toPrint ? req.body.toPrint : false,
     public: req.body.public ? req.body.public : false
-  });
+  })
 
-  generateThumbnails(req.file.buffer, dateId, req.file.mimetype, process.env.SMALL_THUMB_SIZE, req.payload.email);
-  generateThumbnails(req.file.buffer, dateId, req.file.mimetype, process.env.BIG_THUMB_SIZE, req.payload.email);
+  generateThumbnails(
+    req.file.buffer,
+    dateId,
+    req.file.mimetype,
+    process.env.SMALL_THUMB_SIZE,
+    req.payload.email
+  )
+  generateThumbnails(
+    req.file.buffer,
+    dateId,
+    req.file.mimetype,
+    process.env.BIG_THUMB_SIZE,
+    req.payload.email
+  )
 
-  uploadToS3(req.file.buffer, dateId, req.file.mimetype, false, null, req.payload.email, (err, data) => {
-    // console.log('---');
-    // console.log('S3 callback ORI', err, data);
+  uploadToS3(
+    req.file.buffer,
+    dateId,
+    req.file.mimetype,
+    false,
+    null,
+    req.payload.email,
+    (err, data) => {
+      // console.log('---');
+      // console.log('S3 callback ORI', err, data);
 
-    if (err) {
-      console.error(err);
-      return res.status(500).send('failed to upload to s3').end();
+      if (err) {
+        console.error(err)
+        return res.status(500).send('failed to upload to s3').end()
+      }
+
+      res.status(200).send('File uploaded to S3').end()
     }
-
-    res.status(200)
-      .send('File uploaded to S3')
-      .end();
-  });
-});
+  )
+})
 
 router.put('/:imageId', authGuard, async (req, res) => {
   // console.log('Updating image');
@@ -116,10 +158,12 @@ router.put('/:imageId', authGuard, async (req, res) => {
 
   await req.context.models.Image.findByIdAndUpdate(
     req.params.imageId,
-    req.body, {
+    req.body,
+    {
       // new: true
-    }, (err, image) => {
-      if (err) return res.status(500).send(err);
+    },
+    (err, image) => {
+      if (err) return res.status(500).send(err)
 
       // console.log('After updated image');
       // console.log(image.tags);
@@ -127,28 +171,35 @@ router.put('/:imageId', authGuard, async (req, res) => {
       if (req.body.tags) {
         // Is there any new tags
         if (req.body.tags.length > image.tags.length) {
-          const bodyTagsIds = [];
-          req.body.tags.map(tag => {
-            bodyTagsIds.push(tag._id);
-          });
-          const newTagIds = bodyTagsIds.filter(tag => !image.tags.includes(tag));
+          const bodyTagsIds = []
+          req.body.tags.map((tag) => {
+            bodyTagsIds.push(tag._id)
+          })
+          const newTagIds = bodyTagsIds.filter(
+            (tag) => !image.tags.includes(tag)
+          )
           // console.log('----difference');
           // console.log(newTagIds);
-          newTagIds.map(tagId => {
-            req.context.models.Tag.findByIdAndUpdate(tagId, {
-              lastUsed: new Date(),
-              $addToSet: {
-                'images': image._id
+          newTagIds.map((tagId) => {
+            req.context.models.Tag.findByIdAndUpdate(
+              tagId,
+              {
+                lastUsed: new Date(),
+                $addToSet: {
+                  images: image._id
+                }
+              },
+              {
+                safe: true,
+                upsert: true,
+                new: true,
+                useFindAndModify: false
+              },
+              (err, tag) => {
+                // console.log(err, tag.images);
               }
-            }, {
-              safe: true,
-              upsert: true,
-              new: true,
-              useFindAndModify: false
-            }, (err, tag) => {
-              // console.log(err, tag.images);
-            });
-          });
+            )
+          })
         }
 
         // console.log('Updating image tags');
@@ -171,11 +222,12 @@ router.put('/:imageId', authGuard, async (req, res) => {
 
       const response = {
         errorCode: 0
-      };
+      }
 
-      return res.status(200).send(response);
-    });
-});
+      return res.status(200).send(response)
+    }
+  )
+})
 
 router.get('/all', authGuard, async (req, res) => {
   // await req.context.models.Image.find((err, images) => {
@@ -199,163 +251,192 @@ router.get('/all', authGuard, async (req, res) => {
     sort: {
       date: -1
     }
-  };
+  }
 
-  await req.context.models.Image.paginate({
-    user: req.payload._id
-  }, options, async (err, result) => {
-    // console.log(err);
-    // console.log(result.docs.length);
-    // result.docs
-    // result.totalDocs = 100
-    // result.limit = 10
-    // result.page = 1
-    // result.totalPages = 10
-    // result.hasNextPage = true
-    // result.nextPage = 2
-    // result.hasPrevPage = false
-    // result.prevPage = null
-    // result.pagingCounter = 1
+  await req.context.models.Image.paginate(
+    {
+      user: req.payload._id
+    },
+    options,
+    async (err, result) => {
+      // console.log(err);
+      // console.log(result.docs.length);
+      // result.docs
+      // result.totalDocs = 100
+      // result.limit = 10
+      // result.page = 1
+      // result.totalPages = 10
+      // result.hasNextPage = true
+      // result.nextPage = 2
+      // result.hasPrevPage = false
+      // result.prevPage = null
+      // result.pagingCounter = 1
 
-    if (err) return res.status(500).send(err);
+      if (err) return res.status(500).send(err)
 
-    result.docs.forEach(image => {
-      image.signedUrl = getSignedUrl(image, req.payload.email, 'small');
-      // image.rollId = image.albums[0].rollId;
-    });
+      result.docs.forEach((image) => {
+        image.signedUrl = getSignedUrl(image, req.payload.email, 'small')
+        // image.rollId = image.albums[0].rollId;
+      })
 
-    const response = {
-      images: result.docs,
-      hasMore: result.hasNextPage,
-      totalImages: result.totalDocs
-    };
+      const response = {
+        images: result.docs,
+        hasMore: result.hasNextPage,
+        totalImages: result.totalDocs
+      }
 
-    return res.status(200).send(response);
-  });
-});
+      return res.status(200).send(response)
+    }
+  )
+})
 
 router.get('/:imageId/big', authGuard, async (req, res) => {
   await req.context.models.Image.findById(req.params.imageId, (err, image) => {
-    if (err) return res.status(500).send(err);
+    if (err) return res.status(500).send(err)
 
-    image.signedUrl = getSignedUrl(image, req.payload.email, 'big');
+    image.signedUrl = getSignedUrl(image, req.payload.email, 'big')
 
     const response = {
-      'image': image
-    };
+      image: image
+    }
 
-    return res.status(200).send(response);
-  }).populate('tags').lean();
-});
+    return res.status(200).send(response)
+  })
+    .populate('tags')
+    .lean()
+})
 
 router.get('/favorites', authGuard, async (req, res) => {
-  await req.context.models.Image.find({
-    stars: {
-      $gt: 0
+  await req.context.models.Image.find(
+    {
+      stars: {
+        $gt: 0
+      },
+      user: req.payload._id
     },
-    user: req.payload._id
-  }, null, {
-    sort: {
-      stars: -1
+    null,
+    {
+      sort: {
+        stars: -1
+      }
+    },
+    (err, images) => {
+      if (err) return res.status(500).send(err)
+
+      images.forEach((image) => {
+        image.signedUrl = getSignedUrl(image, req.payload.email, 'small')
+      })
+
+      const response = {
+        images: images
+      }
+
+      return res.status(200).send(response)
     }
-  }, (err, images) => {
-    if (err) return res.status(500).send(err);
-
-    images.forEach(image => {
-      image.signedUrl = getSignedUrl(image, req.payload.email, 'small');
-    });
-
-    const response = {
-      'images': images
-    };
-
-    return res.status(200).send(response);
-  }).populate('tags albums').lean();
-});
+  )
+    .populate('tags albums')
+    .lean()
+})
 
 router.get('/toprint', authGuard, async (req, res) => {
-  await req.context.models.Image.find({
-    toPrint: true,
-    user: req.payload._id
-  }, null, (err, images) => {
-    if (err) return res.status(500).send(err);
+  await req.context.models.Image.find(
+    {
+      toPrint: true,
+      user: req.payload._id
+    },
+    null,
+    (err, images) => {
+      if (err) return res.status(500).send(err)
 
-    images.forEach(image => {
-      image.signedUrl = getSignedUrl(image, req.payload.email, 'small');
-    });
+      images.forEach((image) => {
+        image.signedUrl = getSignedUrl(image, req.payload.email, 'small')
+      })
 
-    const response = {
-      'images': images
-    };
+      const response = {
+        images: images
+      }
 
-    return res.status(200).send(response);
-  }).populate('tags albums').lean();
-});
+      return res.status(200).send(response)
+    }
+  )
+    .populate('tags albums')
+    .lean()
+})
 
 router.get('/:imageId/signedUrl', authGuard, async (req, res) => {
   await req.context.models.Image.findById(req.params.imageId, (err, image) => {
-    if (err) return res.status(500).send(err);
+    if (err) return res.status(500).send(err)
 
-    const signedUrl = getSignedUrl(image, req.payload.email, req.query.size);
+    const signedUrl = getSignedUrl(image, req.payload.email, req.query.size)
 
     const response = {
-      'signedUrl': signedUrl
-    };
+      signedUrl: signedUrl
+    }
 
-    return res.status(200).send(response);
-  }).lean();
-});
+    return res.status(200).send(response)
+  }).lean()
+})
 
 router.delete('/:imageId', authGuard, async (req, res) => {
-  await req.context.models.Image.findByIdAndRemove(req.params.imageId, (err, image) => {
-    if (err) return res.status(500).send(err);
+  await req.context.models.Image.findByIdAndRemove(
+    req.params.imageId,
+    (err, image) => {
+      if (err) return res.status(500).send(err)
 
-    deleteFromS3(image);
+      deleteFromS3(image)
 
-    const response = {
-      message: 'Image successfully deleted',
-      id: image._id
-    };
+      const response = {
+        message: 'Image successfully deleted',
+        id: image._id
+      }
 
-    return res.status(200).send(response);
-  });
-});
-
-// PUBLIC
+      return res.status(200).send(response)
+    }
+  )
+})
 
 router.get('/public', async (req, res) => {
-  await req.context.models.Image.find({
-    public: true
-  }, null, (err, images) => {
-    if (err) return res.status(500).send(err);
+  await req.context.models.Image.find(
+    {
+      public: true
+    },
+    null,
+    (err, images) => {
+      if (err) return res.status(500).send(err)
 
-    images.forEach(image => {
-      image.signedUrl = getSignedUrl(image, 'pol.giron@gmail.com', 'small');
-    });
+      images.forEach((image) => {
+        image.signedUrl = getSignedUrl(image, 'pol.giron@gmail.com', 'small')
+      })
 
-    const response = {
-      'images': images
-    };
+      const response = {
+        images: images
+      }
 
-    return res.status(200).send(response);
-  }).populate('tags albums').lean();
-});
+      return res.status(200).send(response)
+    }
+  )
+    .populate('tags albums')
+    .lean()
+})
 
 router.get('/:imageId/big/public', async (req, res) => {
   await req.context.models.Image.findById(req.params.imageId, (err, image) => {
-    if (err) return res.status(500).send(err);
-    if (!image.public) return res.status(200).send({
-      'errorMsg': 'Image is not public'
-    });
+    if (err) return res.status(500).send(err)
+    if (!image.public)
+      return res.status(200).send({
+        errorMsg: 'Image is not public'
+      })
 
-    image.signedUrl = getSignedUrl(image, 'pol.giron@gmail.com', 'big');
+    image.signedUrl = getSignedUrl(image, 'pol.giron@gmail.com', 'big')
 
     const response = {
-      'image': image
-    };
+      image: image
+    }
 
-    return res.status(200).send(response);
-  }).populate('tags').lean();
-});
+    return res.status(200).send(response)
+  })
+    .populate('tags')
+    .lean()
+})
 
-export default router;
+export default router

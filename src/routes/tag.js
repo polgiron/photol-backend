@@ -1,94 +1,106 @@
-import {
-  Router
-} from 'express';
-import {
-  authGuard
-} from '../utils/auth-guard.js';
+import { Router } from 'express'
+import { authGuard } from '../utils/auth-guard.js'
 
-const router = Router();
+const router = Router()
 
 router.post('/', authGuard, async (req, res) => {
-  await req.context.models.Tag.create({
-    value: req.body.value,
-    images: req.body.images ? req.body.images : [],
-    user: req.payload._id,
-    lastUsed: new Date()
-  }, (err, tag) => {
-    if (err) return res.status(500).send(err);
+  await req.context.models.Tag.create(
+    {
+      value: req.body.value,
+      images: req.body.images ? req.body.images : [],
+      user: req.payload._id,
+      lastUsed: new Date()
+    },
+    (err, tag) => {
+      if (err) return res.status(500).send(err)
 
-    if (req.body.images) {
-      req.body.images.forEach(imageId => {
-        req.context.models.Image.findByIdAndUpdate(
-          imageId, {
-            $addToSet: {
-              'tags': tag._id
+      if (req.body.images) {
+        req.body.images.forEach((imageId) => {
+          req.context.models.Image.findByIdAndUpdate(
+            imageId,
+            {
+              $addToSet: {
+                tags: tag._id
+              }
+            },
+            {
+              safe: true,
+              upsert: true,
+              new: true,
+              useFindAndModify: false
+            },
+            function (err, model) {
+              // console.log(err, model);
             }
-          }, {
-            safe: true,
-            upsert: true,
-            new: true,
-            useFindAndModify: false
-          },
-          function (err, model) {
-            // console.log(err, model);
-          }
-        );
-      });
+          )
+        })
+      }
+
+      const response = {
+        message: 'Tag successfully created',
+        tag: tag
+      }
+
+      return res.status(200).send(response)
     }
-
-    const response = {
-      message: 'Tag successfully created',
-      tag: tag
-    };
-
-    return res.status(200).send(response);
-  });
-});
+  )
+})
 
 router.get('/all', authGuard, async (req, res) => {
-  await req.context.models.Tag.find({
-    user: req.payload._id
-  }, (err, tags) => {
-    if (err) return res.status(500).send(err);
+  await req.context.models.Tag.find(
+    {
+      user: req.payload._id
+    },
+    (err, tags) => {
+      if (err) return res.status(500).send(err)
 
-    const response = {
-      'tags': tags
-    };
+      const response = {
+        tags: tags
+      }
 
-    return res.status(200).send(response);
-  }).lean();
-});
+      return res.status(200).send(response)
+    }
+  ).lean()
+})
 
 router.get('/lastused', authGuard, async (req, res) => {
-  await req.context.models.Tag.find({
-    user: req.payload._id
-  }, null, {
-    sort: {
-      lastUsed: -1
+  await req.context.models.Tag.find(
+    {
+      user: req.payload._id
     },
-    limit: 20
-  }, (err, tags) => {
-    if (err) return res.status(500).send(err);
+    null,
+    {
+      sort: {
+        lastUsed: -1
+      },
+      limit: 20
+    },
+    (err, tags) => {
+      if (err) return res.status(500).send(err)
 
-    const response = {
-      'tags': tags
-    };
+      const response = {
+        tags: tags
+      }
 
-    return res.status(200).send(response);
-  }).lean();
-});
+      return res.status(200).send(response)
+    }
+  ).lean()
+})
 
 router.delete('/:tagId', authGuard, async (req, res) => {
-  await req.context.models.Tag.findByIdAndRemove(req.params.tagId, (err, tag) => {
-    if (err) return res.status(500).send(err);
+  await req.context.models.Tag.findByIdAndRemove(
+    req.params.tagId,
+    (err, tag) => {
+      if (err) return res.status(500).send(err)
 
-    const response = {
-      message: 'Tag successfully deleted',
-      id: tag._id
-    };
+      const response = {
+        message: 'Tag successfully deleted',
+        id: tag._id
+      }
 
-    return res.status(200).send(response);
-  });
-});
+      return res.status(200).send(response)
+    }
+  )
+})
 
-export default router;
+export default router

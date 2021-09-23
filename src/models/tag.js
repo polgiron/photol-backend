@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose from 'mongoose'
 
 const tagSchema = new mongoose.Schema({
   user: {
@@ -11,14 +11,16 @@ const tagSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
-  images: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Image'
-  }],
+  images: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Image'
+    }
+  ],
   lastUsed: {
     type: Date
   }
-});
+})
 
 // tagSchema.pre('save', function (next) {
 //   // console.log('---BEFORE CREATE TAG');
@@ -40,6 +42,6 @@ const tagSchema = new mongoose.Schema({
 //   next();
 // });
 
-const Tag = mongoose.model('Tag', tagSchema);
+const Tag = mongoose.model('Tag', tagSchema)
 
-export default Tag;
+export default Tag

@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose from 'mongoose'
 
 const albumSchema = new mongoose.Schema({
   user: {
@@ -16,16 +16,18 @@ const albumSchema = new mongoose.Schema({
   date: {
     type: Number
   },
-  images: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Image'
-  }],
+  images: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Image'
+    }
+  ],
   cover: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Image'
   }
-});
+})
 
-const Album = mongoose.model('Album', albumSchema);
+const Album = mongoose.model('Album', albumSchema)
 
-export default Album;
+export default Album

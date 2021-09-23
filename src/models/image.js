@@ -1,5 +1,5 @@
-import mongoose from 'mongoose';
-import mongoosePaginate from 'mongoose-paginate-v2';
+import mongoose from 'mongoose'
+import mongoosePaginate from 'mongoose-paginate-v2'
 
 const imageSchema = new mongoose.Schema({
   user: {
@@ -10,14 +10,18 @@ const imageSchema = new mongoose.Schema({
   title: {
     type: String
   },
-  albums: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Album'
-  }],
-  tags: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Tag'
-  }],
+  albums: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Album'
+    }
+  ],
+  tags: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Tag'
+    }
+  ],
   s3Id: {
     type: String,
     required: true,
@@ -67,22 +71,25 @@ const imageSchema = new mongoose.Schema({
       note: null
     }
   }
-});
+})
 
-imageSchema.plugin(mongoosePaginate);
+imageSchema.plugin(mongoosePaginate)
 
 imageSchema.pre('save', function (next) {
   // console.log('---BEFORE CREATE IMAGE');
   // console.log(this.title);
 
-  this.albums.forEach(albumId => {
-    this.model('Album').findOneAndUpdate({
+  this.albums.forEach((albumId) => {
+    this.model('Album').findOneAndUpdate(
+      {
         _id: albumId
-      }, {
+      },
+      {
         $addToSet: {
-          'images': this._id
+          images: this._id
         }
-      }, {
+      },
+      {
         safe: true,
         upsert: true,
         new: true,
@@ -91,12 +98,12 @@ imageSchema.pre('save', function (next) {
       function (err, model) {
         // console.log(err, model);
       }
-    );
-  });
+    )
+  })
 
-  next();
-});
+  next()
+})
 
-const Image = mongoose.model('Image', imageSchema);
+const Image = mongoose.model('Image', imageSchema)
 
-export default Image;
+export default Image

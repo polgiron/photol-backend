@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose from 'mongoose'
 
 const settingsSchema = new mongoose.Schema({
   user: {
@@ -10,8 +10,8 @@ const settingsSchema = new mongoose.Schema({
   data: {
     type: Object
   }
-});
+})
 
-const Settings = mongoose.model('Settings', settingsSchema);
+const Settings = mongoose.model('Settings', settingsSchema)
 
-export default Settings;
+export default Settings
